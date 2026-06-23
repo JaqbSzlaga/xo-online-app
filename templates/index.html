@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>XO Chaos Online</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4dfb3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="XO Online" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <link rel="icon" href="/static/icon-192.png" />
+  <link rel="stylesheet" href="/static/style.css?v=291stable" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="paper-bg"></div>
+
+  <main class="app">
+    <header class="topbar">
+      <div class="score-pill">X: <span id="scoreX">0</span></div>
+      <button id="langBtn" class="mini-btn">ENG</button>
+      <div class="score-pill">O: <span id="scoreO">0</span></div>
+    </header>
+
+    <section id="menuView" class="paper-card">
+      <h1 class="title">XO CHAOS ONLINE</h1>
+
+      <div class="field">
+        <label id="playModeLabel">Tryb gry</label>
+        <select id="playMode">
+          <option value="online">Online 1v1</option>
+          <option value="local">Lokalnie 1v1</option>
+          <option value="bot">Gra z botem</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label id="versionModeLabel">Wersja gry</label>
+        <select id="versionMode">
+          <option value="classic">Classic</option>
+          <option value="student">Studencki</option>
+        </select>
+      </div>
+
+      <div id="botOptions" class="field hidden">
+        <label>Poziom bota</label>
+        <select id="botDifficulty">
+          <option value="easy">Łatwy</option>
+          <option value="normal" selected>Normalny</option>
+          <option value="hard">Trudny</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label id="matchModeLabel">Tryb meczu</label>
+        <select id="targetScore">
+          <option value="0">Bez limitu</option>
+          <option value="3">Do 3 wygranych</option>
+          <option value="5">Do 5 wygranych</option>
+        </select>
+      </div>
+
+      <label class="check-row">
+        <input type="checkbox" id="alternateStarter" checked />
+        <span id="alternateLabel">Zmieniaj zaczynającego</span>
+      </label>
+
+      <label class="check-row">
+        <input type="checkbox" id="suddenDeath" />
+        <span id="suddenDeathLabel">Nagła śmierć</span>
+      </label>
+
+      <div id="suddenDeathOptions" class="field hidden">
+        <label id="moveTimeLabel">Czas na ruch</label>
+        <select id="moveTimeLimit">
+          <option value="5">5 sekund</option>
+          <option value="10" selected>10 sekund</option>
+          <option value="15">15 sekund</option>
+        </select>
+      </div>
+
+      <div id="studentExtraOptions" class="student-extra hidden">
+        <label class="check-row">
+          <input type="checkbox" id="chaosMode" />
+          <span id="chaosModeLabel">Tryb Chaos</span>
+        </label>
+
+        <div id="chaosOptions" class="field hidden">
+          <label id="chaosVariantLabel">Wariant chaosu</label>
+          <select id="chaosVariant">
+            <option value="hidden">Chaos ukryty</option>
+            <option value="warned" selected>Chaos jawny</option>
+            <option value="fair">Chaos sprawiedliwy</option>
+            <option value="brutal">Chaos brutalny</option>
+          </select>
+        </div>
+
+        <label class="check-row">
+          <input type="checkbox" id="firstBloodMode" />
+          <span id="firstBloodModeLabel">Pierwsza krew</span>
+        </label>
+      </div>
+
+      <div id="onlineOptions" class="online-options">
+        <label class="public-toggle">
+          <input type="checkbox" id="publicRoom" />
+          <span>
+            <strong>Pokój publiczny</strong>
+            <small>Widoczny na liście pokoi</small>
+          </span>
+        </label>
+        <input id="roomNameInput" placeholder="Nazwa pokoju opcjonalnie" maxlength="28" />
+      </div>
+
+      <button id="createRoomBtn" class="main-btn">Utwórz pokój</button>
+
+      <div id="quickMatchBox" class="quick-box">
+        <button id="quickMatchBtn" class="secondary-btn" type="button">⚡ Szybki mecz</button>
+        <button id="publicRoomsBtn" class="secondary-btn" type="button">🌐 Pokoje</button>
+      </div>
+
+      <div class="join-box">
+        <input id="roomCodeInput" placeholder="Kod pokoju" maxlength="8" />
+        <button id="joinRoomBtn" class="secondary-btn">Dołącz</button>
+      </div>
+
+      <button id="instructionsBtn" class="text-btn">Instrukcja</button>
+
+      <div id="publicRoomsPanel" class="public-panel hidden">
+        <h3>Pokoje publiczne</h3>
+        <div id="publicRoomsList" class="public-list"></div>
+      </div>
+    </section>
+
+    <section id="gameView" class="paper-card hidden">
+      <div class="game-head">
+        <div><span id="roomLabel">Pokój:</span> <strong id="roomCode">---</strong></div>
+        <div><span id="youAreLabel">Jesteś:</span> <strong id="playerSymbol">?</strong></div>
+      </div>
+
+      <p id="modeInfo" class="mode-info"></p>
+      <p id="chaosInfo" class="chaos-info hidden"></p>
+      <p id="firstBloodInfo" class="first-blood-info hidden"></p>
+
+      <div id="paperGameToolbar" class="game-toolbar">
+        <button id="paperGameHelp" class="tool-btn" type="button"><span>❔</span><strong>INSTRUKCJA</strong></button>
+        <button id="paperGameCopy" class="tool-btn" type="button"><span>🔗</span><strong>LINK</strong></button>
+        <button id="paperGameMenu" class="tool-btn menu" type="button"><span>🏠</span><strong>MENU</strong></button>
+        <button id="paperGameChat" class="tool-btn" type="button"><span>💬</span><strong>CZAT</strong><em id="chatBadge" class="badge hidden">0</em></button>
+      </div>
+
+      <button id="firstBloodBtn" class="main-btn power-btn hidden">Użyj Pierwszej krwi</button>
+
+      <p id="status" class="status">Oczekiwanie...</p>
+
+      <div id="timerBar" class="timer-bar hidden"><div id="timerFill"></div></div>
+
+      <div id="classicBoard" class="board classic-board"></div>
+      <div id="studentBoard" class="ultimate-board hidden"></div>
+
+      <div id="endPanel" class="end-panel hidden">
+        <h2 id="endMessage"></h2>
+        <button id="rematchBtn" class="main-btn">Rewanż</button>
+        <button id="resetScoreBtn" class="secondary-btn">Reset wyniku</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button data-nav="ranking">🏆<span>Ranking</span></button>
+    <button data-nav="profile">👤<span>Profil</span></button>
+    <button data-nav="friends">👥<span>Znajomi</span></button>
+    <button data-nav="rewards">🎁<span>Nagrody</span></button>
+    <button data-nav="shop">🏬<span>Sklep</span></button>
+  </nav>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="appVersionBadge" class="version-badge">v29.1-stable</div>
+
+  <div id="modalRoot"></div>
+
+  <script src="/static/game.js?v=291stable"></script>
+</body>
+</html>

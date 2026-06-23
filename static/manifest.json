@@ -1,0 +1,30 @@
+{
+  "name": "XO Chaos Online",
+  "short_name": "XO Online",
+  "description": "XO Chaos Online — stabilny rebuild v29.1.",
+  "id": "/",
+  "start_url": "/?v=291stable",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4dfb3",
+  "theme_color": "#f4dfb3",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
