@@ -1429,7 +1429,7 @@ def quick_match(data):
 
 
 @socketio.on("cancel_quick_match")
-def cancel_quick_match():
+def cancel_quick_match(data=None):
     sid = request.sid
     QUICK_MATCH_QUEUE.pop(sid, None)
     emit("quick_match_cancelled", {"message": "Anulowano szukanie / Search cancelled."})
