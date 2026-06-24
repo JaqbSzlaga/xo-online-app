@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "v31.0";
+  const APP_VERSION = "v33.0-student-bot-fix";
   const $ = (id) => document.getElementById(id);
 
   const STORAGE = {
@@ -90,13 +90,44 @@
 
   function clickOriginal(id){ const el=$(id); if(el) el.click(); }
 
+  function rememberMenuChoice(id, value){
+    if(id === "playMode"){
+      window.__xoSelectedPlayMode = value;
+      try { localStorage.setItem("xo-selected-play-mode", value); } catch(e) {}
+    }
+    if(id === "versionMode"){
+      window.__xoSelectedVersionMode = value;
+      try { localStorage.setItem("xo-selected-version-mode", value); } catch(e) {}
+    }
+  }
+
   function setSelect(id,value){
     const el=$(id);
     if(!el) return;
     el.value=value;
+    rememberMenuChoice(id, value);
     el.dispatchEvent(new Event("change",{bubbles:true}));
     refreshActiveStates();
   }
+
+  function syncPaperSelectionToOriginalControls(){
+    const activePlay = document.querySelector("[data-paper-play].active")?.dataset?.paperPlay || window.__xoSelectedPlayMode;
+    const activeVersion = document.querySelector("[data-paper-version].active")?.dataset?.paperVersion || window.__xoSelectedVersionMode;
+
+    if(activePlay && $("playMode") && $("playMode").value !== activePlay){
+      $("playMode").value = activePlay;
+      $("playMode").dispatchEvent(new Event("change",{bubbles:true}));
+    }
+
+    if(activeVersion && $("versionMode") && $("versionMode").value !== activeVersion){
+      $("versionMode").value = activeVersion;
+      $("versionMode").dispatchEvent(new Event("change",{bubbles:true}));
+    }
+
+    refreshActiveStates();
+  }
+
+  window.__xoSyncMenuSelection = syncPaperSelectionToOriginalControls;
 
   function setCheckbox(id,checked){
     const el=$(id);
@@ -792,7 +823,10 @@ function restoreStudentLastMoveHighlight(){
     bottom.innerHTML=`<button type="button" class="paper-nav-btn" data-nav="ranking"><span>🏆</span><span></span></button><button type="button" class="paper-nav-btn" data-nav="profil"><span>👤</span><span></span></button><button type="button" class="paper-nav-btn" data-nav="znajomi"><span>👥</span><span></span></button><button type="button" class="paper-nav-btn" data-nav="nagrody"><span>🎁</span><span></span></button><button type="button" class="paper-nav-btn" data-nav="sklep"><span>🏪</span><span></span></button>`;
     document.body.appendChild(bottom);
 
-    $("paperMainPlay")?.addEventListener("click",()=>clickOriginal("createRoomBtn"));
+    $("paperMainPlay")?.addEventListener("click",()=>{
+      syncPaperSelectionToOriginalControls();
+      clickOriginal("createRoomBtn");
+    });
     document.querySelectorAll("[data-paper-play]").forEach((btn)=>btn.addEventListener("click",()=>setSelect("playMode",btn.dataset.paperPlay)));
     document.querySelectorAll("[data-paper-version]").forEach((btn)=>btn.addEventListener("click",()=>setSelect("versionMode",btn.dataset.paperVersion)));
     document.querySelectorAll("[data-paper-special]").forEach((btn)=>{
@@ -825,6 +859,8 @@ function restoreStudentLastMoveHighlight(){
 
     ["playMode","versionMode","chaosMode","firstBloodMode","suddenDeath","alternateStarter"].forEach((id)=>$(id)?.addEventListener("change",refreshActiveStates));
     updatePaperTexts();
+    rememberMenuChoice("playMode", $("playMode")?.value || "online");
+    rememberMenuChoice("versionMode", $("versionMode")?.value || "classic");
     refreshActiveStates();
   }
 

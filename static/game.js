@@ -1,4 +1,4 @@
-const APP_VERSION = "v31.0";
+const APP_VERSION = "v33.0-student-bot-fix";
 
 const socket = io();
 
@@ -758,11 +758,60 @@ function launchFireworks() {
     }
 }
 
+
+function effectiveMenuValue(selectId, activeSelector, allowedValues, fallback) {
+    let value = null;
+
+    if (selectId === "playMode" && window.__xoSelectedPlayMode) {
+        value = window.__xoSelectedPlayMode;
+    } else if (selectId === "versionMode" && window.__xoSelectedVersionMode) {
+        value = window.__xoSelectedVersionMode;
+    }
+
+    if (!value) {
+        value = document.querySelector(activeSelector)?.dataset?.paperPlay
+            || document.querySelector(activeSelector)?.dataset?.paperVersion
+            || null;
+    }
+
+    if (!value) {
+        value = $(selectId)?.value || fallback;
+    }
+
+    if (!allowedValues.includes(value)) {
+        value = fallback;
+    }
+
+    const select = $(selectId);
+    if (select && select.value !== value) {
+        select.value = value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    if (selectId === "playMode") window.__xoSelectedPlayMode = value;
+    if (selectId === "versionMode") window.__xoSelectedVersionMode = value;
+
+    return value;
+}
+
+function syncMenuSelectionBeforeCreate() {
+    if (typeof window.__xoSyncMenuSelection === "function") {
+        try { window.__xoSyncMenuSelection(); } catch (e) {}
+    }
+
+    return {
+        playMode: effectiveMenuValue("playMode", "[data-paper-play].active", ["online", "local", "bot"], "online"),
+        versionMode: effectiveMenuValue("versionMode", "[data-paper-version].active", ["classic", "student"], "classic")
+    };
+}
+
 function createRoom() {
+    const selected = syncMenuSelectionBeforeCreate();
+
     socket.emit("create_room", {
         client_id: clientId,
-        play_mode: $("playMode").value,
-        version_mode: $("versionMode").value,
+        play_mode: selected.playMode,
+        version_mode: selected.versionMode,
         target_score: Number($("targetScore").value),
         alternate_starter: $("alternateStarter").checked,
         sudden_death: $("suddenDeath").checked,
@@ -823,6 +872,8 @@ function updateModeOptionVisibility() {
     }
     $("chaosSymbolDecay").checked = brutal;
 }
+
+window.createRoom = createRoom;
 
 $("playMode").addEventListener("change", updateModeOptionVisibility);
 $("versionMode").addEventListener("change", updateModeOptionVisibility);

@@ -1,14 +1,13 @@
-const CACHE_NAME = "xo-online-pwa-v31-0-stable-modes";
+const CACHE_NAME = "xo-online-pwa-v33-0-stable-modes";
 
 const STATIC_ASSETS = [
   "/",
-  "/static/style.css?v=31.0",
-  "/static/game.js?v=31.0",
-  "/static/app-paper-template.js?v=31.0",
-  "/static/bot-v27-bridge.js?v=31.0",
-  "/static/public-v28-bridge.js?v=31.0",
-  "/static/match-chat-v29-bridge.js?v=31.0",
-  "/static/student-v30-3-fix.js?v=31.0",
+  "/static/style.css?v=33.0",
+  "/static/game.js?v=33.0",
+  "/static/app-paper-template.js?v=33.0",
+  "/static/bot-v27-bridge.js?v=33.0",
+  "/static/public-v28-bridge.js?v=33.0",
+  "/static/match-chat-v29-bridge.js?v=33.0",
   "/static/manifest.json",
   "/static/icon-192.png",
   "/static/icon-512.png",

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "v31.0";
+  const APP_VERSION = "v33.0-student-bot-fix";
   const STORAGE_PUBLIC = "xo-paper-public-room";
   const STORAGE_ROOM_NAME = "xo-paper-public-room-name";
   const $ = (id) => document.getElementById(id);

@@ -3688,7 +3688,7 @@ body.paper-template #studentBoard .small-board::after {
     }
 }
 
-/* ===== v31.0 STABLE MODES FIX — appended last ===== */
+/* ===== v33.0 STABLE MODES FIX — appended last ===== */
 body.paper-template #endPanel {
     position: relative !important;
     z-index: 30 !important;
@@ -3786,4 +3786,54 @@ body.paper-template #leaveBtn,
 body.paper-template #backToMenuBtn,
 body.paper-template #newGameBtn {
     display: none !important;
+}
+
+
+/* ===== v33: stabilizacja trybu Studenckiego / mobile board ===== */
+body.paper-template #studentBoard.ultimate-board,
+#studentBoard.ultimate-board {
+  width: min(94vw, 430px);
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+}
+
+#studentBoard .small-board {
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+}
+
+#studentBoard .small-cell {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+#studentBoard .small-board.closed .small-cell {
+  pointer-events: none;
+}
+
+#studentBoard .small-board.choose:not(.closed),
+#studentBoard .small-board.active:not(.closed) {
+  position: relative;
+}
+
+#studentBoard .small-cell.last,
+#studentBoard .small-cell.paper-student-last {
+  outline: 3px solid rgba(255, 192, 64, .95);
+  outline-offset: -3px;
 }

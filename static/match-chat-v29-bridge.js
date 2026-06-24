@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "v31.0";
+  const APP_VERSION = "v33.0-student-bot-fix";
   const CLIENT_KEY = "xo-paper-client-id";
   const $ = (id) => document.getElementById(id);
 
