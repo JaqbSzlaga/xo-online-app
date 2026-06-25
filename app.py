@@ -385,13 +385,21 @@ def handle_classic_move(room: GameRoom, symbol: str, index: int) -> Optional[str
 def handle_student_choose_board(room: GameRoom, symbol: str, board_index: int) -> Optional[str]:
     if not room.choose_board_mode:
         return None
-    if symbol != room.chooser_player:
+
+    # Lokalnie obaj gracze klikają na tym samym urządzeniu.
+    # Wcześniej current_symbol() zwracał room.turn, więc gdy właściciel
+    # zamkniętej planszy miał wybrać nową planszę, lokalna gra mogła się
+    # zablokować komunikatem, że wybiera inny gracz.
+    # Online/bot nadal pilnują właściwego symbolu.
+    if room.play_mode != "local" and symbol != room.chooser_player:
         return "Planszę wybiera wskazany gracz / The indicated player chooses the board."
+
     if not room.board_available(board_index):
         return "Ta plansza nie jest dostępna / This board is not available."
     room.active_board = board_index
     room.choose_board_mode = False
     room.chooser_player = None
+    room.refresh_deadline()
     return None
 
 

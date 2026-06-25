@@ -121,20 +121,32 @@
         </section>
 
         <section id="gameView" class="card game-card hidden">
-            <div class="room-row">
-                <div><span id="roomLabel">Pokój:</span> <strong id="roomCode">---</strong></div>
-                <div class="game-actions"><button id="gameHelpBtn" class="small-btn help-btn">?</button><button id="copyLinkBtn" class="small-btn">Kopiuj link</button></div>
+            <div class="game-paper-head">
+                <div class="game-room-code"><span id="roomLabel">Pokój:</span> <strong id="roomCode">---</strong></div>
+                <div class="game-head-actions">
+                    <button id="topGameHelpBtn" class="paper-game-btn small" type="button">📖 Instrukcja</button>
+                    <button id="topCopyLinkBtn" class="paper-game-btn small" type="button">🔗 Link</button>
+                    <button id="chatBtn" class="paper-game-btn small" type="button">💬 Czat</button>
+                </div>
             </div>
-            <div class="player-row"><span id="youAreLabel">Jesteś:</span><strong id="playerSymbol">?</strong></div>
+
+            <div class="player-row paper-player-row"><span id="youAreLabel">Jesteś:</span><strong id="playerSymbol">?</strong></div>
             <p id="modeInfo" class="mode-info"></p>
             <p id="chaosInfo" class="chaos-info hidden"></p>
             <p id="firstBloodInfo" class="first-blood-info hidden"></p>
             <button id="firstBloodBtn" class="main-btn power-btn hidden">Użyj Pierwszej krwi</button>
             <p id="status" class="status">Oczekiwanie...</p>
-            <div id="classicBoard" class="board classic-board"></div>
-            <div id="studentBoard" class="ultimate-board hidden"></div>
+
+            <div class="game-board-wrap">
+                <div id="classicBoard" class="board classic-board"></div>
+                <div id="studentBoard" class="ultimate-board hidden"></div>
+            </div>
+
+            <div class="game-board-actions single-action">
+                <button id="leaveBtn" class="paper-game-btn leave" type="button">↩ Wróć do menu</button>
+            </div>
+
             <div id="endPanel" class="end-panel hidden"><h2 id="endMessage"></h2><button id="rematchBtn" class="main-btn">Rewanż</button><button id="resetScoreBtn" class="main-btn secondary">Zeruj punkty</button></div>
-            <button id="leaveBtn" class="text-btn">Wróć do menu</button>
         </section>
     </main>
 
@@ -149,7 +161,7 @@
     <div id="gameHelpModal" class="modal hidden">
         <div class="modal-card"><div class="modal-head"><h2 id="gameHelpTitle">INSTRUKCJA</h2><button id="closeGameHelpBtn" class="small-btn">×</button></div><div id="gameHelpText" class="rules"></div></div>
     </div>
-    <div id="appVersionBadge" class="version-badge">v22-paper-template-full</div>
+    <div id="appVersionBadge" class="version-badge">v24-clean-game-header-localfix</div>
     <p id="toast" class="toast hidden"></p>
     <script src="/static/game.js"></script>
 </body>
