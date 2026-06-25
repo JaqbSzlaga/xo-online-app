@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>XO Chaos Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4dfb9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="XO Chaos" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="apple-touch-icon" href="/static/icon-192.png" />
+    <link rel="icon" href="/static/icon-192.png" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="paper-template">
+    <div class="bg-symbols" id="bgSymbols"></div>
+
+    <main class="app">
+        <header class="topbar">
+            <div class="score">X: <span id="scoreX">0</span></div>
+            <button id="langBtn" class="small-btn">ENG</button>
+            <div class="score">O: <span id="scoreO">0</span></div>
+        </header>
+
+        <section id="menuView" class="card menu-card">
+            <div class="paper-header">
+                <div class="paper-doodle paper-note">X|O<br>O|X<br>X|O</div>
+                <div class="paper-doodle paper-crown">♕</div>
+                <div class="paper-score-pill">
+                    <span class="paper-coin">★</span>
+                    <span>1250</span>
+                    <span class="paper-avatar">☺</span>
+                </div>
+                <div class="paper-logo">
+                    <div class="paper-logo-xo"><span class="paper-logo-x">X</span><span class="paper-logo-o">O</span></div>
+                    <div class="paper-logo-chaos">CHAOS</div>
+                    <div class="paper-logo-online">ONLINE</div>
+                </div>
+            </div>
+
+            <button type="button" class="paper-play" id="paperMainPlay" aria-label="Graj"></button>
+
+            <div class="paper-tabs" aria-label="Tryb gry">
+                <button type="button" class="paper-tab active" data-play="online">👥 ONLINE</button>
+                <button type="button" class="paper-tab" data-play="local">🏠 LOKALNIE</button>
+                <button type="button" class="paper-tab" data-play="bot">🤖 BOT</button>
+            </div>
+
+            <div class="paper-version-grid">
+                <button type="button" class="paper-version-card classic active" data-version="classic">
+                    <h3>KLASYCZNY</h3>
+                    <p>Zasady, które<br>znasz i lubisz.</p>
+                    <div class="paper-card-doodle">X|O|X<br>O|X|O<br>X|O|X</div>
+                </button>
+                <button type="button" class="paper-version-card student" data-version="student">
+                    <h3>STUDENCKI</h3>
+                    <p>Nie ma zasad.<br>Są tylko możliwości.</p>
+                    <div class="paper-card-doodle student">🎓🥤</div>
+                </button>
+            </div>
+
+            <div class="paper-ribbon-title">ZASADY SPECJALNE ⓘ</div>
+            <div class="paper-special-strip">
+                <button type="button" class="paper-special" data-special="chaos"><span>CHAOS</span><span class="paper-special-icon">🌀</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="firstBlood"><span>FIRST<br>BLOOD</span><span class="paper-special-icon">💧</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="sudden"><span>NAGŁA<br>ŚMIERĆ</span><span class="paper-special-icon">💀</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special active" data-special="alternate"><span>ZMIENIAJ<br>ZACZYNAJĄCEGO</span><span class="paper-special-icon">🔄</span><span class="paper-switch"></span></button>
+            </div>
+
+            <div id="advancedOptions" class="advanced-options hidden">
+                <label>Tryb meczu
+                    <select id="targetScore">
+                        <option value="0">Bez limitu</option>
+                        <option value="3">Do 3 wygranych</option>
+                        <option value="5">Do 5 wygranych</option>
+                    </select>
+                </label>
+                <label id="suddenDeathOptions" class="hidden">Czas nagłej śmierci
+                    <select id="moveTimeLimit">
+                        <option value="5">5 sekund</option>
+                        <option value="10" selected>10 sekund</option>
+                        <option value="15">15 sekund</option>
+                    </select>
+                </label>
+                <label id="chaosOptions" class="hidden">Wariant chaosu
+                    <select id="chaosVariant">
+                        <option value="hidden">Chaos ukryty</option>
+                        <option value="warned" selected>Chaos ostrzegany</option>
+                        <option value="brutal">Chaos brutalny</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="paper-join-box">
+                <input id="roomCodeInput" maxlength="8" placeholder="Kod pokoju" />
+                <button type="button" id="joinRoomBtn">DOŁĄCZ</button>
+            </div>
+
+            <div class="paper-menu-list">
+                <button type="button" class="paper-menu-row" id="settingsBtn"><span class="paper-menu-icon">⚙</span><span>USTAWIENIA</span><span>›</span></button>
+                <button type="button" class="paper-menu-row" id="instructionsBtn"><span class="paper-menu-icon">📖</span><span>INSTRUKCJA</span><span>›</span></button>
+            </div>
+
+            <div class="hidden-controls" aria-hidden="true">
+                <select id="playMode"><option value="online">Online</option><option value="local">Lokalnie</option><option value="bot">Bot</option></select>
+                <select id="versionMode"><option value="classic">Classic</option><option value="student">Studencki</option></select>
+                <input type="checkbox" id="alternateStarter" checked />
+                <input type="checkbox" id="suddenDeath" />
+                <input type="checkbox" id="chaosMode" />
+                <input type="checkbox" id="firstBloodMode" />
+                <button id="createRoomBtn" type="button">Utwórz pokój</button>
+            </div>
+        </section>
+
+        <section id="instructionsView" class="card hidden">
+            <h2 id="rulesTitle">INSTRUKCJA</h2>
+            <div id="rulesText" class="rules"></div>
+            <button id="backFromInstructionsBtn" class="main-btn secondary">Wróć</button>
+        </section>
+
+        <section id="gameView" class="card game-card hidden">
+            <div class="room-row">
+                <div><span id="roomLabel">Pokój:</span> <strong id="roomCode">---</strong></div>
+                <div class="game-actions"><button id="gameHelpBtn" class="small-btn help-btn">?</button><button id="copyLinkBtn" class="small-btn">Kopiuj link</button></div>
+            </div>
+            <div class="player-row"><span id="youAreLabel">Jesteś:</span><strong id="playerSymbol">?</strong></div>
+            <p id="modeInfo" class="mode-info"></p>
+            <p id="chaosInfo" class="chaos-info hidden"></p>
+            <p id="firstBloodInfo" class="first-blood-info hidden"></p>
+            <button id="firstBloodBtn" class="main-btn power-btn hidden">Użyj Pierwszej krwi</button>
+            <p id="status" class="status">Oczekiwanie...</p>
+            <div id="classicBoard" class="board classic-board"></div>
+            <div id="studentBoard" class="ultimate-board hidden"></div>
+            <div id="endPanel" class="end-panel hidden"><h2 id="endMessage"></h2><button id="rematchBtn" class="main-btn">Rewanż</button><button id="resetScoreBtn" class="main-btn secondary">Zeruj punkty</button></div>
+            <button id="leaveBtn" class="text-btn">Wróć do menu</button>
+        </section>
+    </main>
+
+    <nav class="paper-bottom-nav" id="paperBottomNav">
+        <button type="button" class="paper-nav-btn" data-nav="ranking"><span>🏆</span><span>RANKING</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="profil"><span>👤</span><span>PROFIL</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="znajomi"><span>👥</span><span>ZNAJOMI</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="nagrody"><span>🎁</span><span>NAGRODY</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="sklep"><span>🏪</span><span>SKLEP</span></button>
+    </nav>
+
+    <div id="gameHelpModal" class="modal hidden">
+        <div class="modal-card"><div class="modal-head"><h2 id="gameHelpTitle">INSTRUKCJA</h2><button id="closeGameHelpBtn" class="small-btn">×</button></div><div id="gameHelpText" class="rules"></div></div>
+    </div>
+    <div id="appVersionBadge" class="version-badge">v22-paper-template-full</div>
+    <p id="toast" class="toast hidden"></p>
+    <script src="/static/game.js"></script>
+</body>
+</html>

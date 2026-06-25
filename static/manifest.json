@@ -1,0 +1,30 @@
+{
+  "name": "XO Chaos Online",
+  "short_name": "XO Chaos",
+  "description": "XO Chaos Online: Classic, Studencki, Chaos, Pierwsza krew i gra przez link.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4dfb9",
+  "theme_color": "#f4dfb9",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
