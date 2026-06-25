@@ -1,7 +1,7 @@
 {
   "name": "XO Chaos Online",
   "short_name": "XO Chaos",
-  "description": "Pełna wersja XO Chaos Online: Classic, Studencki, Chaos, ranking, profil, nagrody, sklep, czat i publiczne pokoje.",
+  "description": "XO Chaos Online v26: papierowe menu, segmentowa instrukcja, punkty, sklep, czat, publiczne pokoje i poprawiony chaos.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

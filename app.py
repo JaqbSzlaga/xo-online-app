@@ -74,6 +74,7 @@ class GameRoom:
 
     chaos_enabled: bool = False
     chaos_variant: str = "warned"  # hidden / warned / brutal
+    chaos_brutal_interval_sec: int = 15  # brutalny chaos: losowo od 5s do tej wartości
     chaos_next_at: Optional[int] = None
     chaos_warning_board: Optional[int] = None
     chaos_warning_pair: List[int] = field(default_factory=list)
@@ -139,6 +140,7 @@ class GameRoom:
             "timed_action_player": self.timed_action_player,
             "chaos_enabled": self.chaos_enabled,
             "chaos_variant": self.chaos_variant,
+            "chaos_brutal_interval_sec": self.chaos_brutal_interval_sec,
             "chaos_next_at": self.chaos_next_at,
             "chaos_warning_board": self.chaos_warning_board,
             "chaos_warning_pair": self.chaos_warning_pair,
@@ -253,6 +255,14 @@ class GameRoom:
         self.deadline_at = now_ms() + self.move_time_limit * 1000
 
     def random_chaos_delay_ms(self) -> int:
+        # Zwykły chaos: spokojniej, losowo 30-60 s.
+        # Brutalny chaos: krótki zakres wybrany w menu: losowo od 5 s do 5/10/15/20/30 s.
+        if self.chaos_variant == "brutal":
+            max_sec = self.chaos_brutal_interval_sec if self.chaos_brutal_interval_sec in (5, 10, 15, 20, 30) else 15
+            min_sec = 5
+            if max_sec <= min_sec:
+                return min_sec * 1000
+            return random.randint(min_sec * 1000, max_sec * 1000)
         return random.randint(30000, 60000)
 
     def refresh_chaos_clock(self):
@@ -277,7 +287,7 @@ class GameRoom:
             return []
         if self.chaos_variant == "brutal":
             effect = self.chaos_brutal_pending_effect or "swap"
-            if effect == "decay":
+            if effect in ("decay", "flip"):
                 candidates = [i for i in range(9) if any(self.small_boards[i])]
                 needed = 1
             elif effect == "reroute":
@@ -311,6 +321,26 @@ class GameRoom:
             self.big_board[board_index] = ""
             self.small_winners.pop(str(board_index), None)
         self.last_move = {"board": board_index, "cell": cell, "removed": True}
+        self.finish_chaos_cycle()
+
+    def flip_random_symbol_on_board(self, board_index: int):
+        if not 0 <= board_index <= 8:
+            return
+        filled = [i for i, value in enumerate(self.small_boards[board_index]) if value in ("X", "O")]
+        if not filled:
+            return
+        cell = random.choice(filled)
+        old = self.small_boards[board_index][cell]
+        self.small_boards[board_index][cell] = "O" if old == "X" else "X"
+        small_winner, small_line = check_winner(self.small_boards[board_index])
+        if small_winner:
+            self.big_board[board_index] = small_winner
+            self.small_winners[str(board_index)] = {"winner": small_winner, "line": small_line}
+        else:
+            self.big_board[board_index] = ""
+            self.small_winners.pop(str(board_index), None)
+        self.last_move = {"board": board_index, "cell": cell, "flipped": True, "source": "chaos"}
+        self.finish_chaos_cycle()
 
 
 def attach_player(room: GameRoom, sid: str, client_id: str, symbol: str):
@@ -533,37 +563,31 @@ def choose_chaos_pair(room: GameRoom) -> List[int]:
 
 
 def choose_brutal_chaos_effect(room: GameRoom) -> str:
-    possible = []
+    # Brutalny chaos losuje jeden z realnych efektów:
+    # swap = zamiana plansz, decay = usunięcie znaku, flip = zmiana X<->O na losowym polu.
+    effects = ["swap", "decay", "flip"]
+    random.shuffle(effects)
     old = room.chaos_brutal_pending_effect
-    room.chaos_brutal_pending_effect = "swap"
-    if len(room.chaos_candidates()) >= 2:
-        possible.append("swap")
-    room.chaos_brutal_pending_effect = "decay"
-    if len(room.chaos_candidates()) >= 1:
-        possible.append("decay")
-    room.chaos_brutal_pending_effect = "reroute"
-    if len(room.chaos_candidates()) >= 1:
-        possible.append("reroute")
+    for effect in effects:
+        room.chaos_brutal_pending_effect = effect
+        need = 2 if effect == "swap" else 1
+        if len(room.chaos_candidates()) >= need:
+            return effect
     room.chaos_brutal_pending_effect = old
-    return random.choice(possible) if possible else "swap"
+    return "swap"
 
 
 def apply_chaos_effect(room: GameRoom, board_index: int):
     if room.chaos_variant == "brutal":
         effect = room.chaos_brutal_pending_effect or choose_brutal_chaos_effect(room)
         room.chaos_brutal_pending_effect = effect
+
         if effect == "decay":
             room.remove_random_symbol_from_board(board_index)
-            room.finish_chaos_cycle()
             return
-        if effect == "reroute":
-            candidates = room.chaos_candidates()
-            if candidates:
-                room.active_board = random.choice(candidates)
-                room.choose_board_mode = False
-                room.chooser_player = None
-                room.last_move = {"reroute_board": room.active_board, "source": "chaos"}
-            room.finish_chaos_cycle()
+
+        if effect == "flip":
+            room.flip_random_symbol_on_board(board_index)
             return
 
     pair = room.chaos_warning_pair[:] if len(room.chaos_warning_pair) == 2 else choose_chaos_pair(room)
@@ -584,7 +608,7 @@ def run_chaos_tick(room: GameRoom) -> Optional[str]:
 
     if room.chaos_variant == "brutal" and room.chaos_brutal_pending_effect is None:
         room.chaos_brutal_pending_effect = choose_brutal_chaos_effect(room)
-    needed = 1 if room.chaos_variant == "brutal" and room.chaos_brutal_pending_effect in ("decay", "reroute") else 2
+    needed = 1 if room.chaos_variant == "brutal" and room.chaos_brutal_pending_effect in ("decay", "flip") else 2
 
     def not_enough():
         room.chaos_warning_board = None
@@ -660,8 +684,8 @@ def chaos_status_message(room: GameRoom, status: str) -> str:
         eff = room.chaos_brutal_pending_effect
         if eff == "decay":
             return "Brutalny chaos usunął jeden znak / Brutal chaos removed one mark."
-        if eff == "reroute":
-            return "Brutalny chaos przerzucił aktywną planszę / Brutal chaos rerouted the active board."
+        if eff == "flip":
+            return "Brutalny chaos zmienił jeden symbol na przeciwny / Brutal chaos flipped one mark."
         return "Brutalny chaos zamienił dwie plansze miejscami / Brutal chaos swapped two boards."
     return "Chaos zamienił dwie plansze miejscami / Chaos swapped two boards."
 
@@ -891,6 +915,12 @@ def create_room(data):
         chaos_variant = "warned"
     if chaos_variant not in ("hidden", "warned", "brutal"):
         chaos_variant = "warned"
+    try:
+        chaos_brutal_interval_sec = int(data.get("chaos_brutal_interval_sec", 15) or 15)
+    except Exception:
+        chaos_brutal_interval_sec = 15
+    if chaos_brutal_interval_sec not in (5, 10, 15, 20, 30):
+        chaos_brutal_interval_sec = 15
 
     room.play_mode = play_mode
     room.bot_difficulty = bot_difficulty
@@ -903,6 +933,7 @@ def create_room(data):
     room.move_time_limit = move_time_limit
     room.chaos_enabled = bool(data.get("chaos_enabled", False)) and version_mode == "student"
     room.chaos_variant = chaos_variant
+    room.chaos_brutal_interval_sec = chaos_brutal_interval_sec
     room.first_blood_enabled = bool(data.get("first_blood_enabled", False)) and version_mode == "student"
     room.reset_round()
     ROOMS[code] = room

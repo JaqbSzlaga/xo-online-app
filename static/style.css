@@ -533,3 +533,280 @@ body.theme-blue .paper-version-card {
     .paper-nav-btn { font-size: 8px; }
     .paper-nav-btn span:first-child { font-size: 19px; }
 }
+
+/* ==================================================
+   XO Chaos Online — v26 polished chaos and menu/game fixes
+   ================================================== */
+.paper-version-card {
+    min-height: 205px;
+    padding: 20px 18px 90px;
+}
+.paper-version-card h3 {
+    font-size: clamp(25px, 6.5vw, 34px);
+    line-height: 1.05;
+}
+.paper-version-card p {
+    max-width: 78%;
+    font-size: 16px;
+}
+.paper-card-doodle {
+    right: 18px;
+    bottom: 16px;
+    opacity: .75;
+    z-index: 0;
+}
+.paper-version-card h3,
+.paper-version-card p {
+    position: relative;
+    z-index: 2;
+}
+.classic-doodle {
+    width: 96px;
+    height: 78px;
+    font-size: 23px;
+    opacity: .45;
+}
+.student-doodle {
+    right: 14px !important;
+    bottom: 18px !important;
+    width: 72px !important;
+    font-size: 34px !important;
+    opacity: .85;
+}
+.paper-section-title {
+    font-weight: 950;
+    text-align: left;
+    margin: 2px 2px 8px;
+    letter-spacing: .2px;
+}
+.chaos-visual-options {
+    margin: 10px 4px 14px;
+    padding: 12px;
+    border: 1px solid var(--paper-line);
+    border-radius: 18px;
+    background: rgba(255, 242, 216, .78);
+    box-shadow: var(--shadow-soft);
+}
+.chaos-variant-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.chaos-variant-card {
+    border: 1px solid rgba(92,61,32,.22);
+    border-radius: 16px;
+    background: #fff3d7;
+    color: var(--ink);
+    min-height: 118px;
+    padding: 10px 8px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: 0 7px 12px rgba(77,50,22,.09);
+    text-align: center;
+}
+.chaos-variant-card small {
+    font-weight: 750;
+    line-height: 1.15;
+    font-size: 11px;
+}
+.chaos-variant-card.active {
+    outline: 3px solid rgba(44,111,159,.28);
+    background: #fff8e8;
+}
+.chaos-variant-card.brutal.active,
+.chaos-variant-card.brutal {
+    border-color: rgba(201,74,50,.45);
+}
+.chaos-variant-card.brutal.active {
+    background: linear-gradient(180deg, #d35a43, #b43b2a);
+    color: #fff7e8;
+    outline-color: rgba(201,74,50,.25);
+}
+.chaos-sample {
+    font-size: 30px;
+    line-height: 1;
+}
+.brutal-interval-box {
+    margin-top: 10px;
+    display: grid;
+    gap: 7px;
+    text-align: center;
+    font-weight: 900;
+}
+.brutal-interval-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    padding: 5px;
+    background: rgba(195,148,92,.22);
+    border-radius: 999px;
+    border: 1px solid rgba(92,61,32,.18);
+}
+.brutal-interval-buttons button {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 2px;
+    background: transparent;
+    color: var(--ink);
+    font-weight: 950;
+    cursor: pointer;
+}
+.brutal-interval-buttons button.active {
+    background: var(--red);
+    color: #fff7e8;
+    box-shadow: var(--shadow-soft);
+}
+#chaosOptions,
+#chaosBrutalIntervalOptions {
+    display: none !important;
+}
+.paper-special {
+    min-width: 118px;
+    min-height: 116px;
+    font-size: 12px;
+    padding: 9px 6px;
+}
+.paper-special[data-special="alternate"] {
+    min-width: 138px;
+}
+.paper-special[data-special="alternate"] span:first-child {
+    line-height: 1.05;
+    font-size: 11px;
+}
+.daily-login-card {
+    margin: 9px 4px 10px;
+}
+.daily-login-card button {
+    width: 100%;
+    border: 1px solid var(--paper-line);
+    border-radius: 16px;
+    padding: 12px 14px;
+    background: #fff0d0;
+    color: var(--ink);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 950;
+    cursor: pointer;
+}
+.daily-login-card b {
+    color: var(--red);
+    font-size: 22px;
+}
+.room-score-strip {
+    justify-self: center;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    width: min(360px, 100%);
+}
+.room-score-strip span {
+    border: 1px solid var(--paper-line);
+    border-radius: 999px;
+    background: rgba(255,242,216,.9);
+    padding: 8px 12px;
+    font-weight: 950;
+    box-shadow: var(--shadow-soft);
+}
+.room-score-strip .x-score {
+    color: var(--blue);
+}
+.room-score-strip .o-score {
+    color: var(--red);
+}
+.room-score-strip .vs-dot {
+    padding: 7px 9px;
+    color: var(--ink-soft);
+    font-size: 11px;
+}
+.game-board-wrap {
+    position: relative;
+    display: grid;
+    justify-items: center;
+}
+.end-panel {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%) rotate(-2deg);
+    z-index: 35;
+    width: min(330px, 88%);
+    border: none;
+    border-radius: 10px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    pointer-events: none;
+}
+.victory-stamp {
+    position: relative;
+    background: #fff0d0;
+    color: var(--red);
+    border: 3px solid currentColor;
+    border-radius: 18px;
+    padding: 25px 16px 22px;
+    box-shadow: 0 16px 32px rgba(77,50,22,.28);
+    font-family: Impact, "Arial Black", Arial, sans-serif;
+    text-transform: uppercase;
+}
+.victory-stamp::before,
+.victory-stamp::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: 86px;
+    height: 22px;
+    background: rgba(183, 145, 92, .42);
+    transform: translateX(-50%) rotate(2deg);
+    border-radius: 3px;
+}
+.victory-stamp::before { top: -15px; }
+.victory-stamp::after { bottom: -15px; }
+.victory-crown {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.end-panel h2 {
+    margin: 0;
+    color: currentColor;
+    font-size: clamp(42px, 13vw, 64px);
+    line-height: .95;
+    letter-spacing: 1px;
+}
+.end-panel p {
+    margin: 10px 0 0;
+    color: var(--ink);
+    font-family: Arial, sans-serif;
+    text-transform: none;
+    font-size: 14px;
+    font-weight: 900;
+}
+.end-panel.winner-x .victory-stamp {
+    color: var(--blue);
+}
+.end-panel.draw .victory-stamp {
+    color: var(--ink-soft);
+}
+.dev-points-btn {
+    margin-top: 10px;
+    width: 100%;
+}
+@media (max-width:420px) {
+    .paper-version-grid { gap: 7px; }
+    .paper-version-card { min-height: 170px; padding: 14px 12px 76px; }
+    .paper-version-card p { max-width: 86%; font-size: 13px; }
+    .classic-doodle { width: 78px; height: 62px; font-size: 18px; }
+    .student-doodle { width: 56px !important; font-size: 27px !important; }
+    .chaos-variant-grid { grid-template-columns: 1fr; }
+    .paper-special-strip { grid-template-columns: repeat(4, minmax(112px, 1fr)); }
+    .room-score-strip { width: 100%; }
+    .end-panel { width: min(310px, 92%); }
+}
