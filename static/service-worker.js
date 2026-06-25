@@ -1,4 +1,4 @@
-const CACHE_NAME = "xo-online-pwa-v26-polished-chaos";
+const CACHE_NAME = "xo-online-pwa-v27-target-visual";
 
 const STATIC_ASSETS = [
   "/",

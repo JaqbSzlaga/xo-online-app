@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-    <title>XO Chaos Online — v26</title>
+    <title>XO Chaos Online — v27</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4dfb9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,84 +24,81 @@
             <div class="score">O: <span id="scoreO">0</span></div>
         </header>
 
-        <section id="menuView" class="card menu-card">
-            <div class="paper-header">
-                <div class="paper-doodle paper-note">X|O<br>O|X<br>X|O</div>
-                <div class="paper-doodle paper-crown">♕</div>
-                <div class="paper-score-pill">
-                    <span class="paper-coin">★</span>
-                    <span id="paperPoints">0</span>
-                    <span class="paper-avatar" id="paperAvatar">☺</span>
+        <section id="menuView" class="card menu-card v27-menu-card">
+            <div class="v27-menu-head">
+                <div class="v27-logo" aria-label="XO Chaos Online">
+                    <div><span class="v27-x">X</span><span class="v27-o">O</span><span class="v27-small-o">o</span></div>
+                    <strong>CHAOS</strong>
+                    <em>ONLINE</em>
                 </div>
-                <div class="paper-logo">
-                    <div class="paper-logo-xo"><span class="paper-logo-x">X</span><span class="paper-logo-o">O</span></div>
-                    <div class="paper-logo-chaos">CHAOS</div>
-                    <div class="paper-logo-online">ONLINE</div>
+
+                <div class="v27-profile-strip">
+                    <span class="v27-profile-avatar" id="paperAvatar">☺</span>
+                    <div class="v27-profile-main">
+                        <b id="v27ProfileName">Ty</b>
+                        <div class="v27-level-row"><span id="v27LevelBadge">1</span><i><u id="v27LevelBar"></u></i><small id="v27LevelText">0 / 500</small></div>
+                    </div>
+                    <div class="v27-points"><span>🏆</span><b id="paperPoints">0</b><small>pkt</small></div>
+                    <button type="button" id="v27DevPlusBtn" class="v27-plus" title="Test sklepu">+</button>
                 </div>
             </div>
 
-            <button type="button" class="paper-play" id="paperMainPlay" aria-label="Graj"></button>
-
-            <div class="paper-tabs" aria-label="Tryb gry">
-                <button type="button" class="paper-tab active" data-play="online">👥 ONLINE</button>
-                <button type="button" class="paper-tab" data-play="local">🏠 LOKALNIE</button>
-                <button type="button" class="paper-tab" data-play="bot">🤖 BOT</button>
-            </div>
-
-            <div class="paper-version-grid">
+            <div class="paper-version-grid v27-version-grid">
                 <button type="button" class="paper-version-card classic active" data-version="classic">
                     <h3>KLASYCZNY</h3>
-                    <p>Zasady, które<br>znasz i lubisz.</p>
-                    <div class="paper-card-doodle classic-doodle">X|O|X<br>O|X|O</div>
+                    <div class="v27-card-art classic-art"><span>X</span><span>O</span><span>X</span><span></span><span>X</span><span></span><span>O</span><span></span><span>O</span></div>
+                    <p>Zasady, które znasz<br>i lubisz.</p>
                 </button>
                 <button type="button" class="paper-version-card student" data-version="student">
                     <h3>STUDENCKI</h3>
+                    <div class="v27-student-art"><span>🎓</span><span>🥤</span></div>
                     <p>Nie ma zasad.<br>Są tylko możliwości.</p>
-                    <div class="paper-card-doodle student student-doodle">🎓<br>🥤</div>
                 </button>
             </div>
 
-            <div id="chaosVisualOptions" class="chaos-visual-options hidden">
+            <div id="chaosVisualOptions" class="chaos-visual-options v27-chaos-panel hidden">
                 <div class="paper-section-title">USTAWIENIA CHAOSU 🌀</div>
-                <div class="chaos-variant-grid">
+                <div class="chaos-variant-grid v27-chaos-grid">
                     <button type="button" class="chaos-variant-card" data-chaos-variant="hidden">
                         <span class="chaos-sample spiral">🌀</span>
                         <b>UKRYTY</b>
-                        <small>Nie wiesz, co się wydarzy.</small>
+                        <small>Nie wiesz,<br>co się wydarzy.</small>
+                        <i class="v27-radio"></i>
                     </button>
                     <button type="button" class="chaos-variant-card" data-chaos-variant="warned">
                         <span class="chaos-sample eye">👁️</span>
                         <b>JAWNY</b>
-                        <small>Wiesz, co nadchodzi.</small>
+                        <small>Wiesz,<br>co nadchodzi.</small>
+                        <i class="v27-radio"></i>
                     </button>
                     <button type="button" class="chaos-variant-card brutal" data-chaos-variant="brutal">
                         <span class="chaos-sample bolt">⚡</span>
                         <b>BRUTALNY</b>
-                        <small>Zamienia plansze, usuwa albo odwraca symbol.</small>
+                        <small>Chaos bez ostrzeżenia.</small>
+                        <i class="v27-radio"></i>
+                        <p>Brutalny chaos wystąpi losowo w krótkim przedziale.</p>
+                        <div id="brutalIntervalBox" class="brutal-interval-box hidden">
+                            <div class="brutal-interval-buttons">
+                                <button type="button" data-brutal-interval="5">5 s</button>
+                                <button type="button" data-brutal-interval="10">10 s</button>
+                                <button type="button" data-brutal-interval="15" class="active">15 s</button>
+                                <button type="button" data-brutal-interval="20">20 s</button>
+                                <button type="button" data-brutal-interval="30">30 s</button>
+                            </div>
+                        </div>
                     </button>
                 </div>
-                <div id="brutalIntervalBox" class="brutal-interval-box hidden">
-                    <span>Interwał brutalnego chaosu</span>
-                    <div class="brutal-interval-buttons">
-                        <button type="button" data-brutal-interval="5">5 s</button>
-                        <button type="button" data-brutal-interval="10">10 s</button>
-                        <button type="button" data-brutal-interval="15" class="active">15 s</button>
-                        <button type="button" data-brutal-interval="20">20 s</button>
-                        <button type="button" data-brutal-interval="30">30 s</button>
-                    </div>
-                    <small>Losowo od 5 s do wybranej wartości.</small>
-                </div>
             </div>
 
-            <div class="paper-ribbon-title">ZASADY SPECJALNE ⓘ</div>
-            <div class="paper-special-strip">
-                <button type="button" class="paper-special" data-special="chaos"><span>CHAOS</span><span class="paper-special-icon">🌀</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special" data-special="firstBlood"><span>FIRST<br>BLOOD</span><span class="paper-special-icon">💧</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special" data-special="sudden"><span>NAGŁA<br>ŚMIERĆ</span><span class="paper-special-icon">💀</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special active" data-special="alternate"><span>ZMIENIAJ<br>ZACZYNAJĄCEGO</span><span class="paper-special-icon">🔄</span><span class="paper-switch"></span></button>
+            <div class="paper-ribbon-title v27-ribbon">ZASADY SPECJALNE ⓘ</div>
+            <div class="paper-special-strip v27-special-strip">
+                <button type="button" class="paper-special" data-special="chaos"><span class="paper-special-icon">🌀</span><span>CHAOS</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="firstBlood"><span class="paper-special-icon">💧</span><span>FIRST BLOOD</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="sudden"><span class="paper-special-icon">💀</span><span>NAGŁA ŚMIERĆ</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special active alternate-special" data-special="alternate"><span class="paper-special-icon">🔄</span><span>ZMIENIAJ ZACZYNAJĄCEGO</span><span class="paper-switch"></span></button>
             </div>
 
-            <div id="advancedOptions" class="advanced-options hidden">
+            <div id="advancedOptions" class="advanced-options v27-advanced hidden">
                 <label>Tryb meczu
                     <select id="targetScore">
                         <option value="0">Bez limitu</option>
@@ -148,20 +145,30 @@
                 </label>
             </div>
 
-            <div class="paper-join-box">
+            <div class="v27-play-zone">
+                <button type="button" class="v27-mode-btn active" data-play="online">👥 ONLINE</button>
+                <button type="button" class="paper-play v27-main-play" id="paperMainPlay" aria-label="Graj"></button>
+                <button type="button" class="v27-mode-btn" data-play="bot">🤖 BOT</button>
+            </div>
+            <button type="button" class="v27-local-btn" data-play="local">🏠 LOKALNIE</button>
+
+            <div class="v27-lower-grid">
+                <div class="daily-login-card v27-daily" id="dailyLoginCard">
+                    <button type="button" id="dailyLoginBtn"><b>+50 pkt</b><span>za logowanie</span>🎁</button>
+                </div>
+                <div class="v27-settings-card">
+                    <span>⚙</span>
+                    <b id="settingsBtn">USTAWIENIA</b>
+                    <div class="v27-lang-switch"><button type="button" data-menu-lang="PL" class="active">PL</button><button type="button" data-menu-lang="ENG">ENG</button></div>
+                </div>
+            </div>
+
+            <div class="paper-join-box v27-join-box">
                 <input id="roomCodeInput" maxlength="8" placeholder="Kod pokoju" />
                 <button type="button" id="joinRoomBtn">DOŁĄCZ</button>
             </div>
-            <div class="daily-login-card" id="dailyLoginCard">
-                <button type="button" id="dailyLoginBtn"><b>+50 pkt</b><span>za logowanie / kliknięcie</span>🎁</button>
-            </div>
-
             <button type="button" id="publicRoomsBtn" class="paper-wide-btn">🌍 POKOJE PUBLICZNE</button>
-
-            <div class="paper-menu-list">
-                <button type="button" class="paper-menu-row" id="settingsBtn"><span class="paper-menu-icon">⚙</span><span>USTAWIENIA</span><span>›</span></button>
-                <button type="button" class="paper-menu-row" id="instructionsBtn"><span class="paper-menu-icon">📖</span><span>INSTRUKCJA</span><span>›</span></button>
-            </div>
+            <button type="button" id="instructionsBtn" class="paper-wide-btn v27-instruction-btn">📖 INSTRUKCJA</button>
 
             <div class="hidden-controls" aria-hidden="true">
                 <select id="playMode"><option value="online">Online</option><option value="local">Lokalnie</option><option value="bot">Bot</option></select>
@@ -249,7 +256,7 @@
         </div>
     </div>
 
-    <div id="appVersionBadge" class="version-badge">v26-polished-chaos</div>
+    <div id="appVersionBadge" class="version-badge">v27-target-visual</div>
     <p id="toast" class="toast hidden"></p>
     <script src="/static/game.js"></script>
 </body>

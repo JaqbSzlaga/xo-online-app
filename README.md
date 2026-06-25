@@ -81,3 +81,18 @@ Start Command:
 ```bash
 gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
 ```
+
+
+# v27-target-visual
+
+Pełna aplikacja z docelowym papierowym wyglądem menu inspirowanym wybraną grafiką.
+
+Zmiany:
+- nowe menu główne: logo po lewej, profil/punkty po prawej, duże karty Klasyczny/Studencki,
+- przeprojektowane ustawienia chaosu: Ukryty / Jawny / Brutalny + interwał 5/10/15/20/30 s,
+- poprawione karty, żeby grafiki nie zasłaniały tekstu,
+- czytelne zasady specjalne i kafelek Zmieniaj zaczynającego,
+- ustawienia języka PL/ENG w menu,
+- +50 pkt za logowanie,
+- przycisk + w profilu dodaje punkty testowe do sklepu,
+- ekran wygranej zostaje wyświetlany centralnie na planszy w pokoju gry.

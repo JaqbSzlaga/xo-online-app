@@ -1,14 +1,14 @@
 {
-  "name": "XO Chaos Online",
+  "name": "XO Chaos Online v27",
   "short_name": "XO Chaos",
-  "description": "XO Chaos Online v26: papierowe menu, segmentowa instrukcja, punkty, sklep, czat, publiczne pokoje i poprawiony chaos.",
+  "description": "XO Chaos Online — pełna wersja v27 z docelowym papierowym wyglądem menu, chaosem, rankingiem, profilem, sklepem i czatem.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4dfb9",
-  "theme_color": "#f4dfb9",
+  "background_color": "#efd3a5",
+  "theme_color": "#efd3a5",
   "icons": [
     {
       "src": "/static/icon-192.png",

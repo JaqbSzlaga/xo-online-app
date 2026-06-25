@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v26-polished-chaos";
+const APP_VERSION = "v27-target-visual";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -157,6 +157,19 @@ function updateHeaderProfile() {
   if (p) p.textContent = String(appData.points || 0);
   const a = $("paperAvatar");
   if (a) a.textContent = appData.avatar || "☺";
+  const name = $("v27ProfileName");
+  if (name) name.textContent = appData.profileName || "Ty";
+  const level = Math.max(1, appData.level || 1);
+  const badgeLevel = $("v27LevelBadge");
+  if (badgeLevel) badgeLevel.textContent = String(level);
+  const next = level * 500;
+  const prev = (level - 1) * 500;
+  const current = Math.max(0, (appData.points || 0) - prev);
+  const need = Math.max(1, next - prev);
+  const bar = $("v27LevelBar");
+  if (bar) bar.style.width = Math.min(100, Math.round((current / need) * 100)) + "%";
+  const txt = $("v27LevelText");
+  if (txt) txt.textContent = `${current} / ${need}`;
   const badge = $("appVersionBadge");
   if (badge) badge.textContent = APP_VERSION;
 }
@@ -298,6 +311,7 @@ function refreshMenu() {
   $("roomNameWrap")?.classList.toggle("hidden", !settings.publicRoom);
   const publicRoom = $("publicRoom");
   if (publicRoom) publicRoom.checked = !!settings.publicRoom;
+  document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
 }
 function applySettingsFromControls() {
   settings.targetScore = parseInt($("targetScore")?.value || "0", 10);
@@ -791,6 +805,18 @@ function initMenu() {
     addPoints(50, "bonus za logowanie");
     saveData();
   };
+
+  document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.onclick = () => {
+    language = btn.dataset.menuLang;
+    localStorage.setItem("xo_chaos_language", language);
+    applyLanguage();
+    refreshMenu();
+    showToast(language === "ENG" ? "Language changed" : "Język zmieniony");
+  });
+  $("v27DevPlusBtn")?.addEventListener("click", () => {
+    addPoints(250, "test sklepu");
+    saveData();
+  });
   $("paperMainPlay").onclick = createRoom;
   $("createRoomBtn").onclick = createRoom;
   $("joinRoomBtn").onclick = () => joinRoom();
