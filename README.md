@@ -96,3 +96,8 @@ Zmiany:
 - +50 pkt za logowanie,
 - przycisk + w profilu dodaje punkty testowe do sklepu,
 - ekran wygranej zostaje wyświetlany centralnie na planszy w pokoju gry.
+
+
+# v28-reference-visual
+
+Poprawiono menu główne pod grafikę referencyjną: pełna szerokość telefonu, kompaktowy panel chaosu, brak poziomego rozjazdu, ukryte niższe przyciski techniczne z menu, dopracowany dolny pasek.

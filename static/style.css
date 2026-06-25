@@ -923,3 +923,331 @@ body.in-game .app { padding-bottom:18px !important; }
 @media (max-width:420px){
   .v27-menu-card{padding:10px 12px 86px !important}.v27-menu-head{grid-template-columns:1fr;}.v27-logo{text-align:center}.v27-profile-strip{grid-template-columns:43px 1fr auto 28px}.v27-version-grid{gap:10px !important}.v27-version-grid .paper-version-card{min-height:178px !important;padding:18px 10px !important}.v27-version-grid .paper-version-card h3{font-size:27px !important}.v27-card-art{width:76px;height:62px;font-size:19px;margin:0 auto 8px}.v27-student-art{font-size:42px;min-height:64px}.v27-version-grid .paper-version-card p{font-size:14px !important}.v27-chaos-grid{grid-template-columns:1fr 1fr !important}.v27-chaos-grid .chaos-variant-card.brutal{grid-column:1/3}.v27-special-strip{gap:5px !important}.v27-special-strip .paper-special{font-size:11px !important;min-height:86px !important}.v27-play-zone{grid-template-columns:1fr 98px 1fr;gap:8px}.v27-main-play{width:98px !important;height:98px !important}.v27-mode-btn{font-size:17px}.v27-lower-grid{gap:8px}.v27-daily b{font-size:22px}.v27-daily span{font-size:13px}.v27-settings-card{padding:9px}.paper-bottom-nav{gap:4px !important;padding:5px !important}.paper-nav-btn{font-size:9px !important;min-height:56px !important}
 }
+
+/* ==================================================
+   XO Chaos Online — v28 reference visual alignment
+   ================================================== */
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+}
+body.paper-template {
+    background:
+        radial-gradient(circle at 18% 10%, rgba(255,255,255,.28), transparent 24%),
+        radial-gradient(circle at 82% 28%, rgba(188,127,56,.12), transparent 28%),
+        linear-gradient(180deg, #ecd09e 0%, #f6e7c7 34%, #e8c894 100%) !important;
+}
+body.paper-template::before {
+    background-size: 20px 20px !important;
+    opacity: .78;
+}
+.app {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin: 0 auto !important;
+    padding: max(8px, env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+}
+.v27-menu-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 10px 16px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 238, 203, .70) !important;
+    overflow: visible !important;
+}
+.v27-menu-head {
+    grid-template-columns: minmax(0, .94fr) minmax(0, 1.08fr) !important;
+    gap: 8px !important;
+    align-items: start !important;
+    margin: 2px 0 12px !important;
+}
+.v27-logo {
+    text-align: left !important;
+    transform: none !important;
+    padding-left: 2px;
+}
+.v27-logo div {
+    font-size: clamp(46px, 13.6vw, 62px) !important;
+    letter-spacing: .5px !important;
+    line-height: .80 !important;
+}
+.v27-logo strong {
+    font-size: clamp(34px, 10.2vw, 49px) !important;
+    line-height: .92 !important;
+    letter-spacing: .5px !important;
+}
+.v27-logo em {
+    font-size: clamp(14px, 4.1vw, 19px) !important;
+    letter-spacing: 5px !important;
+    margin-top: 3px !important;
+    margin-left: 6px !important;
+}
+.v27-small-o {
+    font-size: .30em !important;
+    margin-left: 4px !important;
+    transform: translateY(6px) !important;
+}
+.v27-profile-strip {
+    min-width: 0 !important;
+    grid-template-columns: 38px minmax(0, 1fr) auto 28px !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    border-radius: 17px !important;
+}
+.v27-profile-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    border-width: 3px !important;
+    font-size: 20px !important;
+}
+.v27-profile-main b {
+    font-size: 18px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.v27-level-row {
+    grid-template-columns: 22px minmax(34px, 1fr) auto !important;
+    gap: 3px !important;
+}
+.v27-level-row small { font-size: 9px !important; }
+.v27-points span { font-size: 22px !important; }
+.v27-points b { font-size: 19px !important; }
+.v27-points small { font-size: 12px !important; }
+.v27-plus { width: 27px !important; height: 27px !important; }
+.v27-version-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 6px 0 14px !important;
+}
+.v27-version-grid .paper-version-card {
+    min-height: 205px !important;
+    border-radius: 16px !important;
+    padding: 20px 10px 16px !important;
+    box-shadow: 0 7px 14px rgba(76,48,20,.12) !important;
+}
+.v27-version-grid .paper-version-card h3 {
+    font-size: clamp(25px, 7.4vw, 33px) !important;
+    line-height: 1 !important;
+    margin-bottom: 8px !important;
+}
+.v27-card-art {
+    width: 86px !important;
+    height: 70px !important;
+    font-size: 22px !important;
+    margin: 4px auto 10px !important;
+}
+.v27-student-art {
+    min-height: 70px !important;
+    font-size: 46px !important;
+    margin: 5px 0 8px !important;
+}
+.v27-version-grid .paper-version-card p {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    width: 100% !important;
+}
+.v27-chaos-panel {
+    margin: 0 0 14px !important;
+    padding: 10px 8px 12px !important;
+    border-radius: 17px !important;
+    overflow: hidden !important;
+}
+.paper-section-title,
+.v27-ribbon {
+    font-size: 17px !important;
+    letter-spacing: .2px !important;
+    text-align: left !important;
+    padding-left: 4px !important;
+}
+.v27-chaos-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, .82fr) minmax(0, .82fr) minmax(0, 1.46fr) !important;
+    gap: 7px !important;
+    align-items: stretch !important;
+}
+.v27-chaos-grid .chaos-variant-card {
+    min-height: 154px !important;
+    padding: 10px 6px !important;
+    border-radius: 13px !important;
+    overflow: hidden !important;
+}
+.v27-chaos-grid .chaos-sample {
+    font-size: 31px !important;
+    line-height: 1 !important;
+}
+.v27-chaos-grid .chaos-variant-card b {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+    margin-top: 6px !important;
+}
+.v27-chaos-grid .chaos-variant-card small {
+    font-size: 11px !important;
+    line-height: 1.18 !important;
+}
+.v27-chaos-grid .chaos-variant-card.brutal {
+    grid-column: auto !important;
+    min-height: 154px !important;
+    grid-template-columns: 34px minmax(0,1fr) 18px !important;
+    padding: 10px 8px 0 !important;
+}
+.v27-chaos-grid .chaos-variant-card.brutal .chaos-sample { font-size: 33px !important; }
+.v27-chaos-grid .chaos-variant-card.brutal b { font-size: 18px !important; }
+.v27-chaos-grid .chaos-variant-card.brutal small { font-size: 12px !important; }
+.v27-chaos-grid .chaos-variant-card.brutal p {
+    grid-column: 1 / 4 !important;
+    margin: 8px -8px 6px !important;
+    padding: 8px 7px 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.18 !important;
+}
+.v27-radio {
+    width: 18px !important;
+    height: 18px !important;
+    border-width: 3px !important;
+    margin-top: 8px !important;
+}
+.v27-chaos-grid .brutal-interval-buttons {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    border-radius: 999px !important;
+}
+.v27-chaos-grid .brutal-interval-buttons button {
+    font-size: 10.5px !important;
+    padding: 6px 0 !important;
+    min-width: 0 !important;
+}
+.v27-ribbon {
+    width: max-content !important;
+    margin: 1px auto -8px !important;
+    padding: 8px 15px !important;
+    text-align: center !important;
+    border-radius: 8px !important;
+}
+.v27-special-strip {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    padding: 17px 7px 10px !important;
+    margin: 0 0 10px !important;
+    overflow: hidden !important;
+}
+.v27-special-strip .paper-special {
+    min-width: 0 !important;
+    min-height: 84px !important;
+    padding: 8px 3px !important;
+    font-size: 10px !important;
+    line-height: 1.05 !important;
+    border-radius: 11px !important;
+}
+.v27-special-strip .paper-special-icon {
+    font-size: 25px !important;
+}
+.v27-special-strip .paper-special span:nth-child(2) {
+    min-height: 25px !important;
+    font-size: 10px !important;
+}
+.alternate-special span:nth-child(2) { font-size: 9px !important; }
+.paper-switch {
+    width: 40px !important;
+    height: 22px !important;
+}
+.v27-advanced,
+.v27-join-box,
+#publicRoomsBtn,
+#instructionsBtn {
+    display: none !important;
+}
+.v27-play-zone {
+    grid-template-columns: 1fr 112px 1fr !important;
+    gap: 8px !important;
+    margin: 12px 0 4px !important;
+}
+.v27-mode-btn {
+    padding: 15px 6px !important;
+    border-radius: 13px !important;
+    font-size: 20px !important;
+    min-width: 0 !important;
+}
+.v27-main-play {
+    width: 108px !important;
+    height: 108px !important;
+}
+.v27-local-btn {
+    min-width: 148px !important;
+    width: max-content !important;
+    margin: 2px auto 10px !important;
+    padding: 10px 15px !important;
+    border-radius: 13px !important;
+}
+.v27-lower-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin: 8px 0 10px !important;
+}
+.v27-daily button {
+    padding: 10px 6px !important;
+}
+.v27-daily b { font-size: 25px !important; }
+.v27-daily span { font-size: 13px !important; }
+.v27-settings-card {
+    padding: 9px !important;
+    border-radius: 13px !important;
+    grid-template-columns: 34px 1fr !important;
+}
+.v27-settings-card > span { font-size: 30px !important; }
+.v27-settings-card b { font-size: 14px !important; }
+.v27-lang-switch button { padding: 6px 4px !important; }
+.paper-bottom-nav {
+    width: min(430px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    bottom: max(4px, env(safe-area-inset-bottom)) !important;
+    gap: 5px !important;
+    padding: 6px !important;
+    border-radius: 16px 16px 8px 8px !important;
+    overflow: hidden !important;
+}
+.paper-nav-btn {
+    min-width: 0 !important;
+    min-height: 58px !important;
+    padding: 7px 2px 5px !important;
+    font-size: 9px !important;
+    border-radius: 12px !important;
+}
+.paper-nav-btn span:first-child { font-size: 20px !important; }
+.version-badge {
+    bottom: calc(74px + env(safe-area-inset-bottom)) !important;
+    right: 10px !important;
+    font-size: 11px !important;
+}
+/* menu text should stay Polish while we debug language system */
+html[lang="pl"] .v27-settings-card b::after { content:""; }
+@media (max-width: 420px) {
+    .app { max-width: 420px !important; padding-left: 10px !important; padding-right: 10px !important; }
+    .v27-menu-head { grid-template-columns: minmax(0,.88fr) minmax(0,1.12fr) !important; }
+    .v27-logo div { font-size: clamp(42px, 13.4vw, 56px) !important; }
+    .v27-logo strong { font-size: clamp(32px, 10vw, 45px) !important; }
+    .v27-logo em { font-size: 14px !important; letter-spacing: 4.5px !important; }
+    .v27-version-grid .paper-version-card { min-height: 195px !important; }
+    .v27-chaos-grid { grid-template-columns: minmax(0,.82fr) minmax(0,.82fr) minmax(0,1.45fr) !important; }
+    .v27-special-strip .paper-special { min-height: 82px !important; }
+    .v27-play-zone { grid-template-columns: 1fr 104px 1fr !important; }
+    .v27-main-play { width: 102px !important; height: 102px !important; }
+}
+@media (max-width: 370px) {
+    .app { padding-left: 8px !important; padding-right: 8px !important; }
+    .v27-menu-card { padding-left: 8px !important; padding-right: 8px !important; }
+    .v27-menu-head { gap: 6px !important; }
+    .v27-profile-strip { grid-template-columns: 34px minmax(0,1fr) auto 24px !important; gap: 4px !important; padding: 7px !important; }
+    .v27-profile-avatar { width: 34px !important; height: 34px !important; }
+    .v27-points span { font-size: 18px !important; }
+    .v27-points b { font-size: 16px !important; }
+    .v27-version-grid { gap: 8px !important; }
+    .v27-version-grid .paper-version-card { min-height: 184px !important; padding-left: 7px !important; padding-right: 7px !important; }
+    .v27-version-grid .paper-version-card h3 { font-size: 24px !important; }
+    .v27-chaos-grid { gap: 5px !important; }
+    .v27-chaos-grid .chaos-variant-card { padding-left: 4px !important; padding-right: 4px !important; }
+    .v27-chaos-grid .chaos-variant-card.brutal { padding-left: 6px !important; padding-right: 6px !important; }
+    .v27-mode-btn { font-size: 16px !important; }
+}
