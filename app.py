@@ -60,6 +60,11 @@ class GameRoom:
     version_mode: str = "classic"  # classic / student
     play_mode: str = "online"      # online / local / bot
     bot_symbol: str = "O"
+    bot_difficulty: str = "normal"  # easy / normal / hard
+    public_room: bool = False
+    room_name: str = ""
+    created_at: int = field(default_factory=now_ms)
+    chat_messages: List[Dict[str, Any]] = field(default_factory=list)
     target_score: int = 0          # 0, 3, 5
     alternate_starter: bool = True
     sudden_death: bool = False
@@ -117,6 +122,10 @@ class GameRoom:
             "version_mode": self.version_mode,
             "play_mode": self.play_mode,
             "bot_symbol": self.bot_symbol,
+            "bot_difficulty": self.bot_difficulty,
+            "public_room": self.public_room,
+            "room_name": self.room_name,
+            "chat_messages": self.chat_messages[-50:],
             "players_count": 2 if self.play_mode in ("local", "bot") else len(set(self.players.values())),
             "connected_symbols": sorted(set(self.players.values())),
             "disconnected_symbols": sorted(set(self.player_tokens.values()) - set(self.players.values())),
@@ -662,23 +671,59 @@ def choose_bot_classic_move(room: GameRoom, symbol: str) -> Optional[int]:
     empty = [i for i, v in enumerate(board) if not v]
     if not empty:
         return None
+
+    difficulty = room.bot_difficulty if room.bot_difficulty in ("easy", "normal", "hard") else "normal"
+
+    if difficulty == "easy":
+        return random.choice(empty)
+
     opponent = "O" if symbol == "X" else "X"
+
+    # Normalny i trudny: najpierw wygrana, potem blokada.
     for player in (symbol, opponent):
         for i in empty:
             test = board[:]
             test[i] = player
             if check_winner(test)[0] == player:
                 return i
+
+    if difficulty == "hard":
+        # Prosta preferencja strategiczna: centrum -> rogi -> boki.
+        if 4 in empty:
+            return 4
+        for group in ((0, 2, 6, 8), (1, 3, 5, 7)):
+            available = [i for i in group if i in empty]
+            if available:
+                return random.choice(available)
+
     if 4 in empty:
         return 4
     corners = [i for i in (0, 2, 6, 8) if i in empty]
     return random.choice(corners or empty)
 
 
+def choose_bot_board(room: GameRoom) -> Optional[int]:
+    available = room.available_boards()
+    if not available:
+        return None
+    # Bot unika przypadkowego wybierania zamkniętej planszy, żeby nie blokować Studenckiego.
+    if room.bot_difficulty == "hard":
+        # Preferuje plansze, na których ma szansę coś ugrać.
+        scored = []
+        for b in available:
+            mine = room.small_boards[b].count(room.bot_symbol)
+            empty = room.small_boards[b].count("")
+            scored.append((mine * 2 + empty * 0.1, b))
+        scored.sort(reverse=True)
+        return scored[0][1]
+    return random.choice(available)
+
+
 def choose_bot_student_move(room: GameRoom, symbol: str) -> Optional[Tuple[int, int]]:
     if room.choose_board_mode:
-        available = room.available_boards()
-        return (random.choice(available), 0) if available else None
+        b = choose_bot_board(room)
+        return (b, 0) if b is not None else None
+
     boards = [room.active_board] if room.active_board is not None else room.available_boards()
     moves = []
     for b in boards:
@@ -689,37 +734,93 @@ def choose_bot_student_move(room: GameRoom, symbol: str) -> Optional[Tuple[int, 
                 moves.append((b, c))
     if not moves:
         return None
+
+    difficulty = room.bot_difficulty if room.bot_difficulty in ("easy", "normal", "hard") else "normal"
+    if difficulty == "easy":
+        return random.choice(moves)
+
     opponent = "O" if symbol == "X" else "X"
+
+    # Normalny i trudny: wygrana małej planszy, potem blokada.
     for player in (symbol, opponent):
         for b, c in moves:
             test = room.small_boards[b][:]
             test[c] = player
             if check_winner(test)[0] == player:
                 return b, c
+
+    if difficulty == "hard":
+        # Preferuje ruch, który wysyła przeciwnika do zamkniętej planszy tylko wtedy,
+        # gdy aktualny gracz będzie mógł wybrać planszę zgodnie z logiką gry.
+        center = [m for m in moves if m[1] == 4]
+        corners = [m for m in moves if m[1] in (0, 2, 6, 8)]
+        return random.choice(center or corners or moves)
+
     center = [m for m in moves if m[1] == 4]
     return random.choice(center or moves)
 
 
+def bot_use_first_blood_if_needed(room: GameRoom) -> bool:
+    if not (room.version_mode == "student" and room.first_blood_pending and room.first_blood_holder == room.bot_symbol):
+        return False
+
+    candidates = room.first_blood_swap_candidates()
+    if len(candidates) >= 2:
+        a, b = random.sample(candidates, 2)
+        swap_student_boards(room, a, b)
+
+    holder = room.first_blood_holder or room.bot_symbol
+    room.first_blood_power[holder] = False
+    room.first_blood_used[holder] = True
+    room.first_blood_pending = False
+    pending_target = room.first_blood_pending_target
+    room.first_blood_pending_target = None
+    room.first_blood_selected = []
+
+    big_winner, big_line = check_winner(room.big_board)
+    if big_winner:
+        finish_round(room, winner=big_winner, win_line=big_line)
+        return True
+
+    room.turn = "O" if room.turn == "X" else "X"
+    if pending_target is not None:
+        set_next_student_target(room, pending_target)
+    return True
+
+
 def maybe_bot_move(room: GameRoom):
-    socketio.sleep(1.0)
+    socketio.sleep(0.8)
     if room.play_mode != "bot" or room.game_over or room.turn != room.bot_symbol:
         return
+
     if room.version_mode == "classic":
         idx = choose_bot_classic_move(room, room.bot_symbol)
         if idx is not None:
             handle_classic_move(room, room.bot_symbol, idx)
     else:
-        move = choose_bot_student_move(room, room.bot_symbol)
-        if move is not None:
-            b, c = move
+        # Pętla zabezpiecza Studencki: jeśli bot musi najpierw wybrać planszę,
+        # robi to, a potem od razu wykonuje legalny ruch.
+        for _ in range(3):
+            if room.game_over or room.turn != room.bot_symbol:
+                break
             if room.choose_board_mode:
+                b = choose_bot_board(room)
+                if b is None:
+                    break
                 handle_student_choose_board(room, room.bot_symbol, b)
-            else:
-                handle_student_move(room, room.bot_symbol, b, c)
+                socketio.sleep(0.25)
+                continue
+            move = choose_bot_student_move(room, room.bot_symbol)
+            if move is None:
+                break
+            b, c = move
+            handle_student_move(room, room.bot_symbol, b, c)
+            bot_use_first_blood_if_needed(room)
+            break
+
     room.refresh_deadline()
     room.refresh_chaos_clock()
     emit_room_state(room)
-
 
 def deadline_watcher():
     while True:
@@ -760,6 +861,16 @@ def create_room(data):
     play_mode = str(data.get("play_mode", "online"))
     if play_mode not in ("online", "local", "bot"):
         play_mode = "online"
+
+    bot_difficulty = str(data.get("bot_difficulty", "normal"))
+    if bot_difficulty not in ("easy", "normal", "hard"):
+        bot_difficulty = "normal"
+
+    public_room = bool(data.get("public_room", False)) and play_mode == "online"
+    room_name = str(data.get("room_name", "")).strip()[:32]
+    if not room_name:
+        room_name = f"Pokój {code}"
+
     version_mode = str(data.get("version_mode", "classic"))
     if version_mode not in ("classic", "student"):
         version_mode = "classic"
@@ -782,6 +893,9 @@ def create_room(data):
         chaos_variant = "warned"
 
     room.play_mode = play_mode
+    room.bot_difficulty = bot_difficulty
+    room.public_room = public_room
+    room.room_name = room_name
     room.version_mode = version_mode
     room.target_score = target_score
     room.alternate_starter = bool(data.get("alternate_starter", True))
@@ -801,6 +915,7 @@ def create_room(data):
     room.refresh_deadline()
     room.refresh_chaos_clock()
     emit("room_created", {"code": code, "symbol": "X"})
+    emit("chat_history", {"messages": room.chat_messages[-50:]})
     emit_room_state(room)
     if play_mode == "bot" and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
@@ -834,7 +949,68 @@ def join_room_by_code(data):
     room.refresh_deadline()
     room.refresh_chaos_clock()
     emit("room_joined", {"code": code, "symbol": symbol})
+    emit("chat_history", {"messages": room.chat_messages[-50:]})
     emit_room_state(room)
+
+
+
+
+def public_rooms_payload() -> List[Dict[str, Any]]:
+    result = []
+    for room in ROOMS.values():
+        if not room.public_room or room.play_mode != "online":
+            continue
+        taken = len(set(room.player_tokens.values()))
+        connected = len(set(room.players.values()))
+        if taken >= 2 and connected >= 2:
+            continue
+        result.append({
+            "code": room.code,
+            "name": room.room_name or f"Pokój {room.code}",
+            "version_mode": room.version_mode,
+            "target_score": room.target_score,
+            "players_count": min(2, taken),
+            "connected_count": connected,
+            "chaos_enabled": room.chaos_enabled,
+            "first_blood_enabled": room.first_blood_enabled,
+            "sudden_death": room.sudden_death,
+            "created_at": room.created_at,
+        })
+    result.sort(key=lambda item: item["created_at"], reverse=True)
+    return result[:20]
+
+
+@socketio.on("list_public_rooms")
+def list_public_rooms():
+    emit("public_rooms", {"rooms": public_rooms_payload()})
+
+
+@socketio.on("send_chat_message")
+def send_chat_message(data):
+    sid = request.sid
+    code = SID_TO_ROOM.get(sid)
+    if not code or code not in ROOMS:
+        emit("error_message", {"message": "Nie jesteś w pokoju / You are not in a room."})
+        return
+    room = ROOMS[code]
+    text = str(data.get("text", "")).strip()
+    if not text:
+        return
+    if len(text) > 300:
+        text = text[:300]
+    symbol = current_symbol(room, sid) or "?"
+    player_name = str(data.get("player_name", "")).strip()[:24] or f"Gracz {symbol}"
+    msg = {
+        "id": f"{room.code}-{now_ms()}-{random.randint(1000, 9999)}",
+        "room": room.code,
+        "symbol": symbol,
+        "player_name": player_name,
+        "text": text,
+        "created_at": now_ms(),
+    }
+    room.chat_messages.append(msg)
+    room.chat_messages = room.chat_messages[-80:]
+    socketio.emit("room_chat_message", msg, room=room.code)
 
 
 @socketio.on("make_move")

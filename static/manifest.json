@@ -1,7 +1,7 @@
 {
   "name": "XO Chaos Online",
   "short_name": "XO Chaos",
-  "description": "XO Chaos Online v23: papierowy wygląd, tryb Studencki, Chaos, Pierwsza krew i gra przez link.",
+  "description": "Pełna wersja XO Chaos Online: Classic, Studencki, Chaos, ranking, profil, nagrody, sklep, czat i publiczne pokoje.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

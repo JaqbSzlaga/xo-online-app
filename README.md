@@ -1,19 +1,69 @@
-# XO Chaos Online — v22-paper-template-full
+# XO Chaos Online — v25 complete paper game
 
 Pełna paczka aplikacji Flask + Socket.IO + PWA.
 
-## Co jest w tej wersji
+## Wersja
 
-- papierowy/ręcznie rysowany ekran menu jak z wybranego szablonu,
-- dolny pasek: Ranking, Profil, Znajomi, Nagrody, Sklep,
+`v25-complete-paper-game`
+
+## Co jest w środku
+
+- papierowy wygląd menu i ekranów dodatkowych,
 - Classic i Studencki,
-- Online 1v1, Lokalnie 1v1, Bot,
-- Nagła śmierć,
-- Chaos: ukryty, ostrzegany, brutalny,
+- Online / Lokalnie / Bot,
+- bot w Classic i Studenckim,
+- poziomy bota: łatwy / normalny / trudny,
+- Chaos tylko w Studenckim: ukryty / jawny / brutalny,
 - Pierwsza krew,
-- rewanż, reset punktów, licznik wyniku,
-- PWA i ikony,
-- wersja w prawym dolnym rogu: `v22-paper-template-full`.
+- Nagła śmierć 5 / 10 / 15 s,
+- ostatni ruch świeci automatycznie cały czas,
+- nad planszą: Instrukcja / Link / Czat,
+- pod planszą: tylko Wróć do menu,
+- segmentowa instrukcja w modalu,
+- czat w pokoju z badge nowych wiadomości i bez duplikatów,
+- publiczne pokoje: checkbox, nazwa pokoju, lista 1/2, dołączanie z listy,
+- profil gracza w localStorage,
+- lokalne statystyki,
+- punkty gracza naliczane tylko za wygrane online,
+- deduplikacja naliczania punktów za tę samą rundę,
+- ranking lokalny i ekran online przygotowany wizualnie,
+- znajomi / zapraszanie linkiem,
+- nagrody / odznaki / dzienne naklejki bez punktów,
+- sklep: motywy, skórki X/O, efekty wygranej,
+- brak testowego przycisku typu `+250 TEST`,
+- PWA: manifest, service worker, ikony.
+
+## Ważne zasady punktów
+
+Punkty można zdobywać tylko za wygrane online.
+
+Nie dodajemy punktów za:
+
+- lokalną grę,
+- grę z botem,
+- podgląd sklepu,
+- dzienne nagrody,
+- testy efektów.
+
+## Render
+
+Build Command:
+
+```bash
+pip install -r requirements.txt
+```
+
+Start Command:
+
+```bash
+gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
+```
+
+Python:
+
+```text
+3.11.9
+```
 
 ## Lokalnie
 
@@ -22,38 +72,8 @@ pip install -r requirements.txt
 python app.py
 ```
 
-## Render
+Adres:
 
-Build Command:
-```bash
-pip install -r requirements.txt
+```text
+http://127.0.0.1:5000
 ```
-
-Start Command:
-```bash
-gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
-```
-
-
-## v23-game-buttons-lastmove
-
-Pełna paczka aplikacji, nie patch.
-
-Zmiany:
-- potwierdzono i zachowano podświetlanie ostatniego ruchu w Classic i Studenckim,
-- dodano przycisk `Podświetl ostatni ruch` pod planszą,
-- przeniesiono duże akcje gry pod planszę,
-- dodano górne przyciski: `Instrukcja`, `Link`, `Czat`,
-- `Czat` jest na razie przyciskiem testowym pod przyszłą funkcję,
-- `Wróć do menu` jest teraz dużym, widocznym przyciskiem pod planszą,
-- podbito cache PWA do `xo-online-pwa-v23-game-buttons-lastmove`.
-
-
-## v24-clean-game-header-localfix
-
-Pełna wersja aplikacji z poprawkami ekranu gry:
-
-- ostatni ruch świeci automatycznie cały czas — bez osobnego przycisku,
-- nad planszą są przyciski: Instrukcja, Link, Czat,
-- pod planszą został tylko duży przycisk `Wróć do menu`,
-- poprawiono lokalny tryb Studencki: wybór nowej planszy po trafieniu w zamkniętą/wygraną planszę nie blokuje już gry na jednym urządzeniu.
