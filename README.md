@@ -101,3 +101,24 @@ Zmiany:
 # v28-reference-visual
 
 Poprawiono menu główne pod grafikę referencyjną: pełna szerokość telefonu, kompaktowy panel chaosu, brak poziomego rozjazdu, ukryte niższe przyciski techniczne z menu, dopracowany dolny pasek.
+
+
+# v29-visual-fix
+
+Poprawki względem v28:
+- poprawiono ściśniętą górę menu,
+- uproszczono pasek profilu/punktów, żeby nie łamał tekstu,
+- poprawiono kafle „Zasady specjalne”, szczególnie ostatni kafel,
+- przeniesiono interwał brutalnego chaosu do kompaktowego paska pod wariantami,
+- dodano widoczny przycisk Instrukcja w menu,
+- poprawiono przełączanie PL/ENG dla widocznych elementów menu,
+- podbito cache/service worker i wersję do `v29-visual-fix`.
+
+
+# v30-rooms-rematch
+
+Zmiany:
+- dodano przycisk `Pokoje` przy punktach/profilu u góry menu,
+- usunięto dolny techniczny przycisk pokoi z głównego układu,
+- dodano widoczny przycisk `Rewanż` w centralnym panelu wygranej/remisu,
+- panel wygranej pozostaje na środku planszy.

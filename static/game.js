@@ -312,6 +312,7 @@ function refreshMenu() {
   const publicRoom = $("publicRoom");
   if (publicRoom) publicRoom.checked = !!settings.publicRoom;
   document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
+  applyMenuLanguage();
 }
 function applySettingsFromControls() {
   settings.targetScore = parseInt($("targetScore")?.value || "0", 10);
@@ -343,7 +344,7 @@ function createRoom() {
 }
 function joinRoom(codeArg = null) {
   const code = (codeArg || $("roomCodeInput")?.value || "").trim().toUpperCase();
-  if (!code) { showToast("Wpisz kod pokoju"); return; }
+  if (!code) { showToast(language === "ENG" ? "Enter room code" : "Wpisz kod pokoju"); return; }
   socket.emit("join_room_by_code", { client_id: clientId, code });
 }
 function requestPublicRooms() { socket.emit("list_public_rooms"); }
@@ -520,20 +521,30 @@ function syncFirstBloodSelecting() {
 }
 function renderEndPanel() {
   const ep = $("endPanel"), em = $("endMessage"), sub = $("endSubMessage");
-  if (!state?.game_over) { ep?.classList.add("hidden"); ep?.classList.remove("winner-x", "winner-o", "draw"); return; }
+  const rematch = $("rematchBtn");
+  const reset = $("resetScoreBtn");
+  if (!state?.game_over) {
+    ep?.classList.add("hidden");
+    ep?.classList.remove("winner-x", "winner-o", "draw");
+    rematch?.classList.add("hidden");
+    reset?.classList.add("hidden");
+    return;
+  }
   ep?.classList.remove("hidden", "winner-x", "winner-o", "draw");
+  rematch?.classList.remove("hidden");
+  reset?.classList.add("hidden");
   if (state.match_winner) {
     ep?.classList.add(state.match_winner === "X" ? "winner-x" : "winner-o");
     em.textContent = `WYGRYWA ${state.match_winner}!`;
-    if (sub) sub.textContent = "Zwycięzca całego meczu";
+    if (sub) sub.textContent = language === "ENG" ? "Match winner" : "Zwycięzca całego meczu";
   } else if (state.winner) {
     ep?.classList.add(state.winner === "X" ? "winner-x" : "winner-o");
     em.textContent = `WYGRYWA ${state.winner}!`;
-    if (sub) sub.textContent = "Runda zakończona zwycięstwem";
+    if (sub) sub.textContent = language === "ENG" ? "Round finished" : "Runda zakończona zwycięstwem";
   } else if (state.draw) {
     ep?.classList.add("draw");
-    em.textContent = "REMIS!";
-    if (sub) sub.textContent = "Nikt nie zdobył przewagi";
+    em.textContent = language === "ENG" ? "DRAW!" : "REMIS!";
+    if (sub) sub.textContent = language === "ENG" ? "No one took the advantage" : "Nikt nie zdobył przewagi";
   }
 }
 
@@ -580,7 +591,46 @@ function copyLink() {
   if (currentRoom) url.searchParams.set("room", currentRoom);
   navigator.clipboard?.writeText(url.toString()).then(() => showToast(t("copied"))).catch(() => showToast(t("notCopied")));
 }
+
+function applyMenuLanguage() {
+  const en = language === "ENG";
+  const setText = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
+  const setHTML = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
+  setText('[data-version="classic"] h3', en ? 'CLASSIC' : 'KLASYCZNY');
+  setHTML('[data-version="classic"] p', en ? 'Rules you know<br>and like.' : 'Zasady, które znasz<br>i lubisz.');
+  setText('[data-version="student"] h3', en ? 'STUDENT' : 'STUDENCKI');
+  setHTML('[data-version="student"] p', en ? 'No strict rules.<br>Only possibilities.' : 'Nie ma zasad.<br>Są tylko możliwości.');
+  setText('.paper-section-title', en ? 'CHAOS SETTINGS 🌀' : 'USTAWIENIA CHAOSU 🌀');
+  setText('[data-chaos-variant="hidden"] b', en ? 'HIDDEN' : 'UKRYTY');
+  setHTML('[data-chaos-variant="hidden"] small', en ? 'You do not know<br>what will happen.' : 'Nie wiesz,<br>co się wydarzy.');
+  setText('[data-chaos-variant="warned"] b', en ? 'VISIBLE' : 'JAWNY');
+  setHTML('[data-chaos-variant="warned"] small', en ? 'You know<br>what is coming.' : 'Wiesz,<br>co nadchodzi.');
+  setText('[data-chaos-variant="brutal"] b', en ? 'BRUTAL' : 'BRUTALNY');
+  setHTML('[data-chaos-variant="brutal"] small', en ? 'No warning.' : 'Bez ostrzeżenia.');
+  setText('#brutalIntervalBox p', en ? 'Brutal chaos happens randomly in the selected short interval.' : 'Brutalny chaos wystąpi losowo w krótkim przedziale.');
+  setText('.v27-ribbon', en ? 'SPECIAL RULES ⓘ' : 'ZASADY SPECJALNE ⓘ');
+  setText('[data-special="chaos"] span:nth-child(2)', 'CHAOS');
+  setText('[data-special="firstBlood"] span:nth-child(2)', en ? '1ST BLOOD' : '1. KREW');
+  setText('[data-special="sudden"] span:nth-child(2)', en ? 'DEATH' : 'NAGŁA ŚM.');
+  setText('[data-special="alternate"] span:nth-child(2)', en ? 'START' : 'START');
+  document.querySelector('[data-play="online"]') && (document.querySelector('[data-play="online"]').innerHTML = en ? '👥 ONLINE' : '👥 ONLINE');
+  document.querySelector('[data-play="bot"]') && (document.querySelector('[data-play="bot"]').innerHTML = en ? '🤖 BOT' : '🤖 BOT');
+  document.querySelector('[data-play="local"]') && (document.querySelector('[data-play="local"]').innerHTML = en ? '🏠 LOCAL' : '🏠 LOKALNIE');
+  const daily = document.querySelector('#dailyLoginBtn');
+  if (daily) daily.innerHTML = en ? '<b>+50 pts</b><span>login bonus</span>🎁' : '<b>+50 pkt</b><span>za logowanie</span>🎁';
+  setText('#settingsBtn', en ? 'SETTINGS' : 'USTAWIENIA');
+  document.querySelectorAll('[data-menu-lang]').forEach(btn => btn.classList.toggle('active', btn.dataset.menuLang === language));
+  const navMap = en ? {ranking:'RANKING', profil:'PROFILE', znajomi:'FRIENDS', nagrody:'REWARDS', sklep:'SHOP'} : {ranking:'RANKING', profil:'PROFIL', znajomi:'ZNAJOMI', nagrody:'NAGRODY', sklep:'SKLEP'};
+  document.querySelectorAll('.paper-nav-btn').forEach(btn => {
+    const label = btn.querySelector('span:last-child');
+    if (label && navMap[btn.dataset.nav]) label.textContent = navMap[btn.dataset.nav];
+  });
+  if ($('instructionsBtn')) $('instructionsBtn').textContent = en ? '📖 INSTRUCTIONS' : '📖 INSTRUKCJA';
+  if ($('joinRoomBtn')) $('joinRoomBtn').textContent = en ? 'JOIN' : 'DOŁĄCZ';
+}
+
 function applyLanguage() {
+  applyMenuLanguage();
   if ($("rulesTitle")) $("rulesTitle").textContent = t("rulesTitle");
   if ($("gameHelpTitle")) $("gameHelpTitle").textContent = t("rulesTitle");
   if ($("rulesText")) $("rulesText").textContent = language === "PL" ? RULES_PL : RULES_ENG;
@@ -589,7 +639,7 @@ function applyLanguage() {
   if ($("resetScoreBtn")) $("resetScoreBtn").textContent = t("resetScore");
   if ($("langBtn")) $("langBtn").textContent = language === "PL" ? "ENG" : "PL";
   document.documentElement.lang = language === "ENG" ? "en" : "pl";
-  const map = language === "ENG" ? {settingsBtn:"⚙ SETTINGS", instructionsBtn:"📖 INSTRUCTIONS", publicRoomsBtn:"🌍 PUBLIC ROOMS", joinRoomBtn:"JOIN", topGameHelpBtn:"📖 Instructions", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Chat", leaveBtn:"↩ Back to menu"} : {settingsBtn:"⚙ USTAWIENIA", instructionsBtn:"📖 INSTRUKCJA", publicRoomsBtn:"🌍 POKOJE PUBLICZNE", joinRoomBtn:"DOŁĄCZ", topGameHelpBtn:"📖 Instrukcja", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Czat", leaveBtn:"↩ Wróć do menu"};
+  const map = language === "ENG" ? {settingsBtn:"⚙ SETTINGS", instructionsBtn:"📖 INSTRUCTIONS", publicRoomsBtn:"🌍 ROOMS", joinRoomBtn:"JOIN", topGameHelpBtn:"📖 Instructions", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Chat", leaveBtn:"↩ Back to menu"} : {settingsBtn:"⚙ USTAWIENIA", instructionsBtn:"📖 INSTRUKCJA", publicRoomsBtn:"🌍 POKOJE", joinRoomBtn:"DOŁĄCZ", topGameHelpBtn:"📖 Instrukcja", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Czat", leaveBtn:"↩ Wróć do menu"};
   Object.entries(map).forEach(([id, txt]) => { const el = $(id); if (el) el.childElementCount && id === "chatBtn" ? el.childNodes[0].nodeValue = txt + " " : el.textContent = txt; });
   renderState();
 }

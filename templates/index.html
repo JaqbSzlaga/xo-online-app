@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-    <title>XO Chaos Online — v28</title>
+    <title>XO Chaos Online — v30</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4dfb9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
     <link rel="manifest" href="/static/manifest.json" />
     <link rel="apple-touch-icon" href="/static/icon-192.png" />
     <link rel="icon" href="/static/icon-192.png" />
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/style.css?v=v30" />
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body class="paper-template">
@@ -27,7 +27,7 @@
         <section id="menuView" class="card menu-card v27-menu-card">
             <div class="v27-menu-head">
                 <div class="v27-logo" aria-label="XO Chaos Online">
-                    <div><span class="v27-x">X</span><span class="v27-o">O</span><span class="v27-small-o">o</span></div>
+                    <div><span class="v27-x">X</span><span class="v27-o">O</span></div>
                     <strong>CHAOS</strong>
                     <em>ONLINE</em>
                 </div>
@@ -39,6 +39,7 @@
                         <div class="v27-level-row"><span id="v27LevelBadge">1</span><i><u id="v27LevelBar"></u></i><small id="v27LevelText">0 / 500</small></div>
                     </div>
                     <div class="v27-points"><span>🏆</span><b id="paperPoints">0</b><small>pkt</small></div>
+                    <button type="button" id="publicRoomsBtn" class="v30-rooms-top-btn" title="Pokoje publiczne">Pokoje</button>
                     <button type="button" id="v27DevPlusBtn" class="v27-plus" title="Test sklepu">+</button>
                 </div>
             </div>
@@ -74,28 +75,28 @@
                     <button type="button" class="chaos-variant-card brutal" data-chaos-variant="brutal">
                         <span class="chaos-sample bolt">⚡</span>
                         <b>BRUTALNY</b>
-                        <small>Chaos bez ostrzeżenia.</small>
+                        <small>Bez ostrzeżenia.</small>
                         <i class="v27-radio"></i>
-                        <p>Brutalny chaos wystąpi losowo w krótkim przedziale.</p>
-                        <div id="brutalIntervalBox" class="brutal-interval-box hidden">
-                            <div class="brutal-interval-buttons">
-                                <button type="button" data-brutal-interval="5">5 s</button>
-                                <button type="button" data-brutal-interval="10">10 s</button>
-                                <button type="button" data-brutal-interval="15" class="active">15 s</button>
-                                <button type="button" data-brutal-interval="20">20 s</button>
-                                <button type="button" data-brutal-interval="30">30 s</button>
-                            </div>
-                        </div>
                     </button>
+                    <div id="brutalIntervalBox" class="brutal-interval-box hidden">
+                        <p>Brutalny chaos wystąpi losowo w krótkim przedziale.</p>
+                        <div class="brutal-interval-buttons">
+                            <button type="button" data-brutal-interval="5">5 s</button>
+                            <button type="button" data-brutal-interval="10">10 s</button>
+                            <button type="button" data-brutal-interval="15" class="active">15 s</button>
+                            <button type="button" data-brutal-interval="20">20 s</button>
+                            <button type="button" data-brutal-interval="30">30 s</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="paper-ribbon-title v27-ribbon">ZASADY SPECJALNE ⓘ</div>
             <div class="paper-special-strip v27-special-strip">
                 <button type="button" class="paper-special" data-special="chaos"><span class="paper-special-icon">🌀</span><span>CHAOS</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special" data-special="firstBlood"><span class="paper-special-icon">💧</span><span>FIRST BLOOD</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special" data-special="sudden"><span class="paper-special-icon">💀</span><span>NAGŁA ŚMIERĆ</span><span class="paper-switch"></span></button>
-                <button type="button" class="paper-special active alternate-special" data-special="alternate"><span class="paper-special-icon">🔄</span><span>ZMIENIAJ ZACZYNAJĄCEGO</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="firstBlood"><span class="paper-special-icon">💧</span><span>1. KREW</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special" data-special="sudden"><span class="paper-special-icon">💀</span><span>NAGŁA ŚM.</span><span class="paper-switch"></span></button>
+                <button type="button" class="paper-special active alternate-special" data-special="alternate"><span class="paper-special-icon">🔄</span><span>START</span><span class="paper-switch"></span></button>
             </div>
 
             <div id="advancedOptions" class="advanced-options v27-advanced hidden">
@@ -167,8 +168,7 @@
                 <input id="roomCodeInput" maxlength="8" placeholder="Kod pokoju" />
                 <button type="button" id="joinRoomBtn">DOŁĄCZ</button>
             </div>
-            <button type="button" id="publicRoomsBtn" class="paper-wide-btn">🌍 POKOJE PUBLICZNE</button>
-            <button type="button" id="instructionsBtn" class="paper-wide-btn v27-instruction-btn">📖 INSTRUKCJA</button>
+            <button type="button" id="instructionsBtn" class="paper-wide-btn v27-instruction-btn v29-visible-instructions">📖 INSTRUKCJA</button>
 
             <div class="hidden-controls" aria-hidden="true">
                 <select id="playMode"><option value="online">Online</option><option value="local">Lokalnie</option><option value="bot">Bot</option></select>
@@ -208,7 +208,7 @@
             <div class="game-board-wrap">
                 <div id="classicBoard" class="board classic-board"></div>
                 <div id="studentBoard" class="ultimate-board hidden"></div>
-                <div id="endPanel" class="end-panel hidden"><div class="victory-stamp"><span class="victory-crown">♛</span><h2 id="endMessage"></h2><p id="endSubMessage">Świetna runda!</p></div><button id="rematchBtn" class="main-btn hidden">Rewanż</button><button id="resetScoreBtn" class="main-btn secondary hidden">Zeruj punkty</button></div>
+                <div id="endPanel" class="end-panel hidden"><div class="victory-stamp"><span class="victory-crown">♛</span><h2 id="endMessage"></h2><p id="endSubMessage">Świetna runda!</p><div class="end-panel-actions"><button id="rematchBtn" class="main-btn hidden">Rewanż</button><button id="resetScoreBtn" class="main-btn secondary hidden">Zeruj punkty</button></div></div></div>
             </div>
 
             <div class="game-board-actions single-action">
@@ -256,8 +256,8 @@
         </div>
     </div>
 
-    <div id="appVersionBadge" class="version-badge">v28-reference-visual</div>
+    <div id="appVersionBadge" class="version-badge">v30-rooms-rematch</div>
     <p id="toast" class="toast hidden"></p>
-    <script src="/static/game.js"></script>
+    <script src="/static/game.js?v=v30"></script>
 </body>
 </html>
