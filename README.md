@@ -130,3 +130,19 @@ Zmiany:
 - Komunikaty Chaosu nie pokazują już dużego czarnego toasta zasłaniającego planszę.
 - Brutalny chaos: zamiana przejętych plansz jest możliwa tylko do momentu, gdy którykolwiek gracz ma 2 przejęte plansze. Później zamiana plansz działa tylko na nieprzejętych planszach, żeby Chaos nie ustawił losowo zwycięskiej linii.
 - Wersja: `v31-rooms-quiet-chaos`.
+
+
+## v32-rooms-button-visible
+
+- Przeniesiono przycisk `Pokoje` nad kafel `+50 pkt za logowanie`.
+- Usunięto `Pokoje` z ciasnego paska profilu/punktów u góry.
+- Przygotowano pełną paczkę aplikacji z podbitym cache PWA.
+
+
+## v33-chaos-selection-time
+
+Zmiany:
+- wyraźniejsze zaznaczenie aktualnie wybranego wariantu chaosu,
+- nowy wybór maksymalnego czasu brutalnego chaosu: 15 s / 30 s / 45 s / 1 min,
+- brutalny chaos losuje następne zdarzenie od 5 sekund do wybranego maksimum,
+- podbite cache PWA i wersja aplikacji.

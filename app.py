@@ -74,7 +74,7 @@ class GameRoom:
 
     chaos_enabled: bool = False
     chaos_variant: str = "warned"  # hidden / warned / brutal
-    chaos_brutal_interval_sec: int = 15  # brutalny chaos: losowo od 5s do tej wartości
+    chaos_brutal_interval_sec: int = 30  # brutalny chaos: losowo od 5s do maksymalnie 15/30/45/60s
     chaos_next_at: Optional[int] = None
     chaos_warning_board: Optional[int] = None
     chaos_warning_pair: List[int] = field(default_factory=list)
@@ -256,9 +256,9 @@ class GameRoom:
 
     def random_chaos_delay_ms(self) -> int:
         # Zwykły chaos: spokojniej, losowo 30-60 s.
-        # Brutalny chaos: krótki zakres wybrany w menu: losowo od 5 s do 5/10/15/20/30 s.
+        # Brutalny chaos: krótki zakres wybrany w menu: losowo od 5 s do wybranego maksimum 15/30/45/60 s.
         if self.chaos_variant == "brutal":
-            max_sec = self.chaos_brutal_interval_sec if self.chaos_brutal_interval_sec in (5, 10, 15, 20, 30) else 15
+            max_sec = self.chaos_brutal_interval_sec if self.chaos_brutal_interval_sec in (15, 30, 45, 60) else 30
             min_sec = 5
             if max_sec <= min_sec:
                 return min_sec * 1000
@@ -930,11 +930,11 @@ def create_room(data):
     if chaos_variant not in ("hidden", "warned", "brutal"):
         chaos_variant = "warned"
     try:
-        chaos_brutal_interval_sec = int(data.get("chaos_brutal_interval_sec", 15) or 15)
+        chaos_brutal_interval_sec = int(data.get("chaos_brutal_interval_sec", 30) or 30)
     except Exception:
-        chaos_brutal_interval_sec = 15
-    if chaos_brutal_interval_sec not in (5, 10, 15, 20, 30):
-        chaos_brutal_interval_sec = 15
+        chaos_brutal_interval_sec = 30
+    if chaos_brutal_interval_sec not in (15, 30, 45, 60):
+        chaos_brutal_interval_sec = 30
 
     room.play_mode = play_mode
     room.bot_difficulty = bot_difficulty

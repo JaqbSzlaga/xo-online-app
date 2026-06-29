@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v31-rooms-quiet-chaos";
+const APP_VERSION = "v33-chaos-selection-time";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -46,7 +46,7 @@ let settings = {
   moveTimeLimit: 10,
   chaosMode: false,
   chaosVariant: "warned",
-  chaosBrutalInterval: 15,
+  chaosBrutalInterval: 30,
   firstBloodMode: false,
   botDifficulty: "normal",
   publicRoom: false,
@@ -183,7 +183,7 @@ const RULE_SECTIONS_PL = [
   ["Podstawy", "Wybierz tryb, wersję gry i naciśnij duży przycisk Graj. Online tworzy pokój przez link, Lokalnie działa na jednym urządzeniu, Bot gra przeciwko komputerowi."],
   ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii."],
   ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę. Jeśli wskazana plansza jest zamknięta, wskazany gracz wybiera nową dostępną planszę."],
-  ["Chaos", "Działa tylko w Studenckim. Ukryty i Jawny zamieniają dwie niepuste, nieprzejęte plansze. Brutalny działa losowo w zakresie 5-30 s i może: zamienić plansze, usunąć symbol albo zmienić symbol X/O na przeciwny."],
+  ["Chaos", "Działa tylko w Studenckim. Ukryty i Jawny zamieniają dwie niepuste, nieprzejęte plansze. Brutalny działa losowo w zakresie 5-60 s i może: zamienić plansze, usunąć symbol albo zmienić symbol X/O na przeciwny."],
   ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę, od razu dostaje jednorazową moc zamiany dwóch niepustych plansz."],
   ["Nagła śmierć", "Gracz ma 5/10/15 sekund na akcję. Jeśli czas minie, traci ruch. W Studenckim system nie blokuje gry podczas wyboru planszy."],
   ["Punkty", "Punkty naliczają się tylko za grę online i tylko raz za daną rundę. Lokalnie, bot i podglądy sklepu nie dodają punktów."],
@@ -194,7 +194,7 @@ const RULE_SECTIONS_ENG = [
   ["Basics", "Choose the mode, game version and press Play. Online creates a room by link, Local works on one device, Bot plays against the computer."],
   ["Classic", "One 3x3 board. The player who gets three marks in one line wins."],
   ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If the board is closed, the indicated player chooses another available board."],
-  ["Chaos", "Student mode only. Hidden and Visible swap two non-captured boards. Brutal uses a short random interval and can swap boards, remove a mark or flip X/O on one cell."],
+  ["Chaos", "Student mode only. Hidden and Visible swap two non-captured boards. Brutal uses a selected maximum random interval and can swap boards, remove a mark or flip X/O on one cell."],
   ["First Blood", "The first player to capture a mini board immediately gets a one-time board-swap power."],
   ["Sudden Death", "The player has 5/10/15 seconds. When time runs out, the action is lost and the turn moves on."],
   ["Points", "Points are awarded only for online play, never for local mode, bot mode, shop preview or test effects."],
@@ -607,7 +607,7 @@ function applyMenuLanguage() {
   setHTML('[data-chaos-variant="warned"] small', en ? 'You know<br>what is coming.' : 'Wiesz,<br>co nadchodzi.');
   setText('[data-chaos-variant="brutal"] b', en ? 'BRUTAL' : 'BRUTALNY');
   setHTML('[data-chaos-variant="brutal"] small', en ? 'No warning.' : 'Bez ostrzeżenia.');
-  setText('#brutalIntervalBox p', en ? 'Brutal chaos happens randomly in the selected short interval.' : 'Brutalny chaos wystąpi losowo w krótkim przedziale.');
+  setText('#brutalIntervalBox p', en ? 'Brutal chaos happens randomly up to the selected max time.' : 'Brutalny chaos zadziała losowo do wybranego maksymalnego czasu.');
   setText('.v27-ribbon', en ? 'SPECIAL RULES ⓘ' : 'ZASADY SPECJALNE ⓘ');
   setText('[data-special="chaos"] span:nth-child(2)', 'CHAOS');
   setText('[data-special="firstBlood"] span:nth-child(2)', en ? '1ST BLOOD' : '1. KREW');

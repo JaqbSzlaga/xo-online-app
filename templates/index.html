@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-    <title>XO Chaos Online — v31</title>
+    <title>XO Chaos Online — v33</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4dfb9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
     <link rel="manifest" href="/static/manifest.json" />
     <link rel="apple-touch-icon" href="/static/icon-192.png" />
     <link rel="icon" href="/static/icon-192.png" />
-    <link rel="stylesheet" href="/static/style.css?v=v31" />
+    <link rel="stylesheet" href="/static/style.css?v=v33" />
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body class="paper-template">
@@ -39,7 +39,6 @@
                         <div class="v27-level-row"><span id="v27LevelBadge">1</span><i><u id="v27LevelBar"></u></i><small id="v27LevelText">0 / 500</small></div>
                     </div>
                     <div class="v27-points"><span>🏆</span><b id="paperPoints">0</b><small>pkt</small></div>
-                    <button type="button" id="publicRoomsBtn" class="v30-rooms-top-btn" title="Pokoje publiczne">Pokoje</button>
                     <button type="button" id="v27DevPlusBtn" class="v27-plus" title="Test sklepu">+</button>
                 </div>
             </div>
@@ -79,13 +78,12 @@
                         <i class="v27-radio"></i>
                     </button>
                     <div id="brutalIntervalBox" class="brutal-interval-box hidden">
-                        <p>Brutalny chaos wystąpi losowo w krótkim przedziale.</p>
+                        <p>Brutalny chaos zadziała losowo do wybranego maksymalnego czasu.</p>
                         <div class="brutal-interval-buttons">
-                            <button type="button" data-brutal-interval="5">5 s</button>
-                            <button type="button" data-brutal-interval="10">10 s</button>
-                            <button type="button" data-brutal-interval="15" class="active">15 s</button>
-                            <button type="button" data-brutal-interval="20">20 s</button>
-                            <button type="button" data-brutal-interval="30">30 s</button>
+                            <button type="button" data-brutal-interval="15">15 s</button>
+                            <button type="button" data-brutal-interval="30" class="active">30 s</button>
+                            <button type="button" data-brutal-interval="45">45 s</button>
+                            <button type="button" data-brutal-interval="60">1 min</button>
                         </div>
                     </div>
                 </div>
@@ -123,11 +121,10 @@
                 </label>
                 <label id="chaosBrutalIntervalOptions" class="hidden">Brutalny chaos
                     <select id="chaosBrutalInterval">
-                        <option value="5">5 sekund</option>
-                        <option value="10">10 sekund</option>
-                        <option value="15" selected>15 sekund</option>
-                        <option value="20">20 sekund</option>
-                        <option value="30">30 sekund</option>
+                        <option value="15">15 sekund</option>
+                        <option value="30" selected>30 sekund</option>
+                        <option value="45">45 sekund</option>
+                        <option value="60">1 minuta</option>
                     </select>
                 </label>
                 <label id="botDifficultyOptions">Poziom bota
@@ -153,14 +150,15 @@
             </div>
             <button type="button" class="v27-local-btn" data-play="local">🏠 LOKALNIE</button>
 
-            <div class="v27-lower-grid">
-                <div class="daily-login-card v27-daily" id="dailyLoginCard">
-                    <button type="button" id="dailyLoginBtn"><b>+50 pkt</b><span>za logowanie</span>🎁</button>
-                </div>
-                <div class="v27-settings-card">
+            <div class="v27-lower-grid v32-lower-grid">
+                <button type="button" id="publicRoomsBtn" class="v32-rooms-card" title="Pokoje publiczne"><span>🌍</span><b>POKOJE</b></button>
+                <div class="v27-settings-card v32-settings-card">
                     <span>⚙</span>
                     <b id="settingsBtn">USTAWIENIA</b>
                     <div class="v27-lang-switch"><button type="button" data-menu-lang="PL" class="active">PL</button><button type="button" data-menu-lang="ENG">ENG</button></div>
+                </div>
+                <div class="daily-login-card v27-daily v32-daily" id="dailyLoginCard">
+                    <button type="button" id="dailyLoginBtn"><b>+50 pkt</b><span>za logowanie</span>🎁</button>
                 </div>
             </div>
 
@@ -256,8 +254,8 @@
         </div>
     </div>
 
-    <div id="appVersionBadge" class="version-badge">v31-rooms-quiet-chaos</div>
+    <div id="appVersionBadge" class="version-badge">v33-chaos-selection-time</div>
     <p id="toast" class="toast hidden"></p>
-    <script src="/static/game.js?v=v31"></script>
+    <script src="/static/game.js?v=v33"></script>
 </body>
 </html>
