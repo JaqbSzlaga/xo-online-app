@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v33-chaos-selection-time";
+const APP_VERSION = "v34-public-rooms-chaos-style";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -49,7 +49,7 @@ let settings = {
   chaosBrutalInterval: 30,
   firstBloodMode: false,
   botDifficulty: "normal",
-  publicRoom: false,
+  publicRoom: true,
   roomName: ""
 };
 
@@ -308,9 +308,8 @@ function refreshMenu() {
   document.querySelectorAll("[data-chaos-variant]").forEach(b => b.classList.toggle("active", b.dataset.chaosVariant === settings.chaosVariant));
   document.querySelectorAll("[data-brutal-interval]").forEach(b => b.classList.toggle("active", parseInt(b.dataset.brutalInterval, 10) === settings.chaosBrutalInterval));
   $("botDifficultyOptions")?.classList.toggle("hidden", settings.playMode !== "bot");
-  $("roomNameWrap")?.classList.toggle("hidden", !settings.publicRoom);
-  const publicRoom = $("publicRoom");
-  if (publicRoom) publicRoom.checked = !!settings.publicRoom;
+  // Pokoje online są publiczne automatycznie, bez checkboxa.
+  $("roomNameWrap")?.classList.add("hidden");
   document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
   applyMenuLanguage();
 }
@@ -320,7 +319,7 @@ function applySettingsFromControls() {
   settings.chaosVariant = $("chaosVariant")?.value || "warned";
   settings.chaosBrutalInterval = parseInt($("chaosBrutalInterval")?.value || "15", 10);
   settings.botDifficulty = $("botDifficulty")?.value || "normal";
-  settings.publicRoom = !!$("publicRoom")?.checked;
+  settings.publicRoom = settings.playMode === "online";
   settings.roomName = $("roomNameInput")?.value?.trim() || "";
 }
 function createRoom() {
@@ -338,7 +337,7 @@ function createRoom() {
     chaos_brutal_interval_sec: settings.chaosBrutalInterval,
     first_blood_enabled: settings.firstBloodMode,
     bot_difficulty: settings.botDifficulty,
-    public_room: settings.publicRoom,
+    public_room: settings.playMode === "online",
     room_name: settings.roomName
   });
 }
@@ -778,7 +777,7 @@ function renderSettings() {
 }
 
 function renderPublicRooms(rooms = []) {
-  const rows = rooms.length ? rooms.map(r => `<div class="public-room-row"><div><b>${esc(r.name)}</b><span>${r.version_mode === 'student' ? 'Studencki' : 'Classic'} • ${r.players_count}/2${r.chaos_enabled?' • Chaos':''}</span></div><button data-join-public="${esc(r.code)}">DOŁĄCZ</button></div>`).join("") : `<p>Brak publicznych pokoi. Utwórz pokój i zaznacz „Pokój publiczny”.</p>`;
+  const rows = rooms.length ? rooms.map(r => `<div class="public-room-row"><div><b>${esc(r.name)}</b><span>${r.version_mode === 'student' ? 'Studencki' : 'Classic'} • ${r.players_count}/2${r.chaos_enabled?' • Chaos':''}</span></div><button data-join-public="${esc(r.code)}">DOŁĄCZ</button></div>`).join("") : `<p>Brak publicznych pokoi. Utwórz pokój ONLINE — będzie publiczny automatycznie.</p>`;
   openFeatureModal("🌍 POKOJE PUBLICZNE", `<button id="refreshPublicRoomsBtn" class="paper-action-btn">ODŚWIEŻ</button><div class="public-rooms-list">${rows}</div>`);
   $("refreshPublicRoomsBtn").onclick = requestPublicRooms;
   document.querySelectorAll("[data-join-public]").forEach(btn => btn.onclick = () => joinRoom(btn.dataset.joinPublic));
@@ -885,7 +884,6 @@ function initMenu() {
   $("rematchBtn").onclick = () => socket.emit("rematch");
   $("resetScoreBtn").onclick = () => socket.emit("reset_score");
   $("langBtn").onclick = () => { language = language === "PL" ? "ENG" : "PL"; localStorage.setItem("xo_chaos_language", language); applyLanguage(); };
-  $("publicRoom")?.addEventListener("change", () => { settings.publicRoom = $("publicRoom").checked; refreshMenu(); });
   ["targetScore", "moveTimeLimit", "chaosVariant", "chaosBrutalInterval", "botDifficulty", "roomNameInput"].forEach(id => $(id)?.addEventListener("change", applySettingsFromControls));
   $("chatForm")?.addEventListener("submit", ev => { ev.preventDefault(); const input = $("chatInput"); const text = input.value.trim(); if (text) sendChat(text); input.value = ""; });
 

@@ -904,7 +904,7 @@ def create_room(data):
     if bot_difficulty not in ("easy", "normal", "hard"):
         bot_difficulty = "normal"
 
-    public_room = bool(data.get("public_room", False)) and play_mode == "online"
+    public_room = play_mode == "online"  # Każdy pokój online jest publiczny automatycznie.
     room_name = str(data.get("room_name", "")).strip()[:32]
     if not room_name:
         room_name = f"Pokój {code}"

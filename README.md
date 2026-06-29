@@ -146,3 +146,13 @@ Zmiany:
 - nowy wybór maksymalnego czasu brutalnego chaosu: 15 s / 30 s / 45 s / 1 min,
 - brutalny chaos losuje następne zdarzenie od 5 sekund do wybranego maksimum,
 - podbite cache PWA i wersja aplikacji.
+
+
+## v34-public-rooms-chaos-style
+
+- Brutalny chaos ma jasny kafel jak pozostałe warianty; wybrany tryb pokazuje etykietę WYBRANY, mocną niebieską ramkę i radio.
+- Czasy brutalnego chaosu pozostają: 15 s / 30 s / 45 s / 1 min. Efekt uruchamia się losowo od 5 sekund do wybranego maksimum.
+- Każdy pokój tworzony w trybie Online jest publiczny automatycznie — nie ma checkboxa „Pokój publiczny”.
+- Lista pokoi ma komunikat zgodny z nową zasadą: wystarczy utworzyć pokój Online.
+- Kafel +50 pkt za logowanie jest bardziej kompaktowy.
+- Brutalny chaos nadal losuje efekty: zamiana plansz, usunięcie symbolu albo zamiana jednego symbolu X/O na przeciwny.

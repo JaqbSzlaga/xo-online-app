@@ -1,4 +1,4 @@
-const CACHE_NAME = "xo-online-pwa-v33-chaos-selection-time";
+const CACHE_NAME = "xo-online-pwa-v34-public-rooms-chaos-style";
 
 const STATIC_ASSETS = [
   "/",
