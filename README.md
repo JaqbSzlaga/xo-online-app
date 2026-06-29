@@ -122,3 +122,11 @@ Zmiany:
 - usunięto dolny techniczny przycisk pokoi z głównego układu,
 - dodano widoczny przycisk `Rewanż` w centralnym panelu wygranej/remisu,
 - panel wygranej pozostaje na środku planszy.
+
+
+## v31 rooms + quiet chaos
+
+- Przycisk `Pokoje` jest widoczny przy profilu/punktach u góry menu.
+- Komunikaty Chaosu nie pokazują już dużego czarnego toasta zasłaniającego planszę.
+- Brutalny chaos: zamiana przejętych plansz jest możliwa tylko do momentu, gdy którykolwiek gracz ma 2 przejęte plansze. Później zamiana plansz działa tylko na nieprzejętych planszach, żeby Chaos nie ustawił losowo zwycięskiej linii.
+- Wersja: `v31-rooms-quiet-chaos`.

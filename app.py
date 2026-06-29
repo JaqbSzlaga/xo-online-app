@@ -285,20 +285,34 @@ class GameRoom:
     def chaos_candidates(self) -> List[int]:
         if self.version_mode != "student":
             return []
+
+        captured_x = sum(1 for value in self.big_board if value == "X")
+        captured_o = sum(1 for value in self.big_board if value == "O")
+        max_captured = max(captured_x, captured_o)
+
         if self.chaos_variant == "brutal":
             effect = self.chaos_brutal_pending_effect or "swap"
+
             if effect in ("decay", "flip"):
+                # Brutalny efekt na symbolach działa na niepustych planszach, ale nie wybiera pustych.
                 candidates = [i for i in range(9) if any(self.small_boards[i])]
                 needed = 1
             elif effect == "reroute":
                 candidates = self.available_boards()
                 needed = 1
             else:
-                candidates = [i for i in range(9) if self.big_board[i] or any(self.small_boards[i])]
+                # Zamiana przejętych plansz jest ryzykowna, bo może losowo ustawić dużą wygraną.
+                # Dlatego przejęte plansze mogą być przesuwane tylko na początku,
+                # dopóki żaden gracz nie ma jeszcze 2 zdobytych małych plansz.
+                if max_captured >= 2:
+                    candidates = [i for i in range(9) if not self.big_board[i] and any(self.small_boards[i])]
+                else:
+                    candidates = [i for i in range(9) if self.big_board[i] or any(self.small_boards[i])]
                 needed = 2
         else:
             candidates = [i for i in range(9) if not self.big_board[i] and any(self.small_boards[i])]
             needed = 2
+
         if self.active_board is not None and len(candidates) > needed:
             filtered = [i for i in candidates if i != self.active_board]
             if len(filtered) >= needed:
@@ -854,7 +868,7 @@ def deadline_watcher():
         for room in list(ROOMS.values()):
             status = run_chaos_tick(room)
             if status:
-                socketio.emit("error_message", {"message": chaos_status_message(room, status)}, room=room.code)
+                # Chaos nie pokazuje dużych toastów — zasłaniały planszę na telefonie.
                 emit_room_state(room)
             if room.sudden_death and room.deadline_at is not None and not room.game_over and room.ready() and n >= room.deadline_at:
                 skipped = room.timed_action_player
@@ -1171,7 +1185,7 @@ def chaos_ping(data=None):
     room = ROOMS[code]
     status = run_chaos_tick(room)
     if status:
-        socketio.emit("error_message", {"message": chaos_status_message(room, status)}, room=room.code)
+        # Bez toastów dla Chaosu — komunikaty nie mogą zasłaniać planszy.
         emit_room_state(room)
 
 

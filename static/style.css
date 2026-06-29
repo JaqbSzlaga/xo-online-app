@@ -1452,3 +1452,45 @@ body.paper-template .app {
   .end-panel { width: min(330px, 90%) !important; }
   .end-panel h2 { font-size: clamp(38px, 12vw, 56px) !important; }
 }
+
+
+/* ==================================================
+   XO Chaos Online — v31 rooms visible + quiet chaos
+   ================================================== */
+.v27-profile-strip {
+  grid-template-columns: 34px minmax(0, 1fr) auto auto 28px !important;
+  gap: 5px !important;
+}
+.v30-rooms-top-btn {
+  min-width: 58px !important;
+  width: auto !important;
+  height: 28px !important;
+  padding: 4px 7px !important;
+  display: inline-grid !important;
+  grid-auto-flow: column !important;
+  place-items: center !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+.v30-rooms-top-btn::before {
+  content: "🌍" !important;
+  font-size: 13px !important;
+}
+.toast.chaos-toast,
+.toast[data-chaos="true"] { display: none !important; }
+@media (max-width: 420px) {
+  .v27-profile-strip {
+    grid-template-columns: 30px minmax(0, .86fr) auto 54px 24px !important;
+    gap: 3px !important;
+  }
+  .v30-rooms-top-btn {
+    min-width: 50px !important;
+    font-size: 8.5px !important;
+    padding: 3px 4px !important;
+  }
+  .v30-rooms-top-btn::before { font-size: 11px !important; }
+  .v27-points small { font-size: 8px !important; }
+}

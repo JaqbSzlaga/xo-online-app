@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v27-target-visual";
+const APP_VERSION = "v31-rooms-quiet-chaos";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -928,7 +928,11 @@ socket.on("room_state", newState => {
   renderState();
   if (chatOpen) renderChatMessages();
 });
-socket.on("error_message", data => showToast(data.message || "Błąd"));
+socket.on("error_message", data => {
+  const msg = data.message || "Błąd";
+  if (/chaos|Chaos|Brutalny/i.test(msg)) return;
+  showToast(msg);
+});
 socket.on("public_rooms", data => renderPublicRooms(data.rooms || []));
 socket.on("chat_history", data => {
   (data.messages || []).forEach(m => seenChatIds.add(m.id));
