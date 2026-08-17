@@ -1,18 +1,19 @@
 const socket = io();
-const APP_VERSION = "v34-public-rooms-chaos-style";
-const CLIENT_ID_KEY = "xo_online_client_id";
-const DATA_KEY = "xo_chaos_profile_v25";
-const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
+const APP_VERSION = "v31-clean";
+const CLIENT_ID_KEY = "xo_clean_client_id";
+const LANG_KEY = "xo_clean_lang";
+const SETTINGS_KEY = "xo_clean_settings";
 
 function $(id) { return document.getElementById(id); }
-function esc(text) {
-  return String(text ?? "")
+function esc(value) {
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
 function getClientId() {
   let id = localStorage.getItem(CLIENT_ID_KEY);
   if (!id) {
@@ -23,19 +24,13 @@ function getClientId() {
 }
 
 const clientId = getClientId();
+let language = localStorage.getItem(LANG_KEY) || "PL";
+let state = null;
 let mySymbol = null;
 let currentRoom = null;
-let state = null;
 let serverTimeOffsetMs = 0;
-let language = localStorage.getItem("xo_chaos_language") || "PL";
-let lastFireworkKey = "";
 let firstBloodSelecting = false;
 let firstBloodSelectedBoards = [];
-let chatOpen = false;
-let unreadChat = 0;
-let seenChatIds = new Set();
-let roomStartAt = null;
-let lastKnownBigBoards = "";
 
 let settings = {
   playMode: "online",
@@ -49,279 +44,160 @@ let settings = {
   chaosBrutalInterval: 30,
   firstBloodMode: false,
   botDifficulty: "normal",
-  publicRoom: true,
   roomName: ""
 };
 
-const ACHIEVEMENTS = [
-  { id: "first_game", icon: "🎲", title: "Pierwsza gra", desc: "Zagraj pierwszą rundę." },
-  { id: "first_online_win", icon: "🏆", title: "Pierwsza wygrana online", desc: "Wygraj rundę online." },
-  { id: "quick_match", icon: "⚡", title: "Szybki mecz", desc: "Wygraj online w krótkim czasie." },
-  { id: "student_board", icon: "🎓", title: "Plansza Studencka", desc: "Zdobądź małą planszę w Studenckim." },
-  { id: "chaos_player", icon: "🌀", title: "Chaos opanowany", desc: "Zagraj rundę z Chaosem." },
-  { id: "bot_win", icon: "🤖", title: "Pogromca bota", desc: "Wygraj z botem." },
-  { id: "three_online_wins", icon: "🔥", title: "Seria online", desc: "Zdobądź 3 wygrane online." },
-  { id: "collector", icon: "🎁", title: "Kolekcjoner", desc: "Kup pierwszy element w sklepie." }
-];
+try {
+  const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+  if (saved && typeof saved === "object") settings = { ...settings, ...saved };
+} catch { }
 
-const SHOP_ITEMS = [
-  { id: "theme_paper", type: "theme", name: "Papierowy", price: 0, icon: "📜", className: "theme-paper" },
-  { id: "theme_retro", type: "theme", name: "Retro", price: 150, icon: "🕹️", className: "theme-retro" },
-  { id: "theme_blue", type: "theme", name: "Niebieski", price: 220, icon: "🔵", className: "theme-blue" },
-  { id: "skin_classic", type: "skin", name: "Klasyczne X/O", price: 0, icon: "XO" },
-  { id: "skin_marker", type: "skin", name: "Marker", price: 200, icon: "✍️" },
-  { id: "skin_neon", type: "skin", name: "Neon", price: 300, icon: "💡" },
-  { id: "effect_confetti", type: "effect", name: "Fajerwerki", price: 0, icon: "🎆" },
-  { id: "effect_stars", type: "effect", name: "Gwiazdki", price: 250, icon: "⭐" },
-  { id: "effect_paper", type: "effect", name: "Papierowe iskry", price: 300, icon: "✨" }
-];
+const T = {
+  PL: {
+    appLabel: "gra online", mainTitle: "Wybierz grę", mainSub: "Prosta wersja bez profili, punktów, sklepu i rankingu.",
+    modeTitle: "Tryb gry", online: "Online", local: "Lokalnie", bot: "Bot",
+    boardTitle: "Plansza", classic: "Klasyczny", classicDesc: "Jedna plansza 3×3.", student: "Studencki", studentDesc: "Dziewięć małych plansz i wybór kolejnej.",
+    specialRules: "Zasady specjalne", sudden: "Nagła śmierć", suddenDesc: "Limit czasu na ruch.", alternate: "Naprzemienny start", alternateDesc: "Po rundzie zaczyna drugi symbol.",
+    chaos: "Chaos", chaosDesc: "Tylko w trybie Studenckim.", firstBlood: "Pierwsza krew", firstBloodDesc: "Pierwsza zdobyta mała plansza daje zamianę plansz.",
+    scoreLimit: "Limit punktów", oneRound: "Jedna runda", moveLimit: "Czas ruchu", botLevel: "Poziom bota", easy: "Łatwy", normal: "Normalny", hard: "Trudny",
+    chaosType: "Typ chaosu", warned: "Jawny", hidden: "Ukryty", brutal: "Brutalny", chaosTime: "Chaos co maks.",
+    roomsTitle: "Pokoje", startGame: "Start gry", join: "Dołącz", publicRooms: "Pokoje publiczne", instructions: "Instrukcja", settings: "Ustawienia",
+    instructionsShort: "Instrukcja", link: "Link", menu: "Menu", room: "Pokój", you: "Ty", score: "Wynik", useFirstBlood: "Użyj Pierwszej Krwi",
+    rematch: "Rewanż", resetScore: "Reset wyniku",
+    waiting: "Czekamy na drugiego gracza", disconnected: "rozłączony", winner: "Wygrywa", draw: "Remis", matchWinner: "wygrywa mecz",
+    yourTurn: "Twoja tura", opponentTurn: "Tura przeciwnika", turn: "Tura", botTurn: "Tura bota…",
+    chooseBoard: "wybiera planszę", thenTurn: "potem tura", timeLeft: "czas",
+    copied: "Link skopiowany", noRoom: "Najpierw utwórz pokój", enterCode: "Wpisz kod pokoju",
+    availableRooms: "Dostępne pokoje", refresh: "Odśwież", noPublicRooms: "Brak publicznych pokoi. Utwórz grę Online.",
+    modalSettings: "Ustawienia", language: "Język", close: "Zamknij",
+    firstBloodInfo: "Pierwsza krew: wybierz dwie plansze do zamiany.",
+    chaosInfo: "Chaos aktywny",
+    rulesTitle: "Instrukcja"
+  },
+  ENG: {
+    appLabel: "online game", mainTitle: "Choose game", mainSub: "Clean version without profiles, points, shop or ranking.",
+    modeTitle: "Game mode", online: "Online", local: "Local", bot: "Bot",
+    boardTitle: "Board", classic: "Classic", classicDesc: "One 3×3 board.", student: "Student", studentDesc: "Nine small boards and target-board choices.",
+    specialRules: "Special rules", sudden: "Sudden death", suddenDesc: "Move timer.", alternate: "Alternate starter", alternateDesc: "Next round starts with the other symbol.",
+    chaos: "Chaos", chaosDesc: "Student mode only.", firstBlood: "First Blood", firstBloodDesc: "First captured board gives a board swap.",
+    scoreLimit: "Score limit", oneRound: "One round", moveLimit: "Move timer", botLevel: "Bot level", easy: "Easy", normal: "Normal", hard: "Hard",
+    chaosType: "Chaos type", warned: "Warned", hidden: "Hidden", brutal: "Brutal", chaosTime: "Chaos max.",
+    roomsTitle: "Rooms", startGame: "Start game", join: "Join", publicRooms: "Public rooms", instructions: "Instructions", settings: "Settings",
+    instructionsShort: "Rules", link: "Link", menu: "Menu", room: "Room", you: "You", score: "Score", useFirstBlood: "Use First Blood",
+    rematch: "Rematch", resetScore: "Reset score",
+    waiting: "Waiting for the second player", disconnected: "disconnected", winner: "Winner", draw: "Draw", matchWinner: "wins the match",
+    yourTurn: "Your turn", opponentTurn: "Opponent turn", turn: "Turn", botTurn: "Bot turn…",
+    chooseBoard: "chooses board", thenTurn: "then turn", timeLeft: "time",
+    copied: "Link copied", noRoom: "Create a room first", enterCode: "Enter room code",
+    availableRooms: "Available rooms", refresh: "Refresh", noPublicRooms: "No public rooms. Create an Online game.",
+    modalSettings: "Settings", language: "Language", close: "Close",
+    firstBloodInfo: "First Blood: choose two boards to swap.",
+    chaosInfo: "Chaos active",
+    rulesTitle: "Instructions"
+  }
+};
 
-function defaultData() {
-  return {
-    profileName: "GraczXO",
-    avatar: "🙂",
-    points: 0,
-    level: 1,
-    stats: {
-      played: 0,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      onlineWins: 0,
-      onlinePlayed: 0,
-      botWins: 0,
-      studentBoardsCaptured: 0,
-      chaosGames: 0
-    },
-    achievements: {},
-    friends: [
-      { name: "Maja", status: "Online" },
-      { name: "Wojtek", status: "W grze" },
-      { name: "Bartek", status: "Offline" }
-    ],
-    rewards: { lastDailyDate: "", streak: 0, dailyClaims: 0 },
-    shop: {
-      owned: ["theme_paper", "skin_classic", "effect_confetti"],
-      activeTheme: "theme_paper",
-      activeSkin: "skin_classic",
-      activeEffect: "effect_confetti"
-    }
-  };
-}
-function loadData() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(DATA_KEY) || "null");
-    return mergeDeep(defaultData(), parsed || {});
-  } catch {
-    return defaultData();
-  }
-}
-function mergeDeep(base, override) {
-  for (const key of Object.keys(override || {})) {
-    if (override[key] && typeof override[key] === "object" && !Array.isArray(override[key]) && base[key]) {
-      base[key] = mergeDeep(base[key], override[key]);
-    } else {
-      base[key] = override[key];
-    }
-  }
-  return base;
-}
-let appData = loadData();
-function saveData() {
-  localStorage.setItem(DATA_KEY, JSON.stringify(appData));
-  updateHeaderProfile();
-  applyTheme();
-}
-function getProcessedRounds() {
-  try { return new Set(JSON.parse(localStorage.getItem(PROCESSED_ROUNDS_KEY) || "[]")); }
-  catch { return new Set(); }
-}
-function saveProcessedRounds(set) {
-  localStorage.setItem(PROCESSED_ROUNDS_KEY, JSON.stringify([...set].slice(-200)));
-}
-function awardAchievement(id) {
-  if (!appData.achievements[id]) {
-    appData.achievements[id] = new Date().toISOString();
-    showToast("Odznaka zdobyta: " + (ACHIEVEMENTS.find(a => a.id === id)?.title || id));
-  }
-}
-function addPoints(amount, reason) {
-  if (!amount || amount <= 0) return;
-  appData.points += amount;
-  const level = Math.max(1, Math.floor(appData.points / 500) + 1);
-  appData.level = level;
-  showToast(`+${amount} punktów${reason ? " — " + reason : ""}`);
-}
-function updateHeaderProfile() {
-  const p = $("paperPoints");
-  if (p) p.textContent = String(appData.points || 0);
-  const a = $("paperAvatar");
-  if (a) a.textContent = appData.avatar || "☺";
-  const name = $("v27ProfileName");
-  if (name) name.textContent = appData.profileName || "Ty";
-  const level = Math.max(1, appData.level || 1);
-  const badgeLevel = $("v27LevelBadge");
-  if (badgeLevel) badgeLevel.textContent = String(level);
-  const next = level * 500;
-  const prev = (level - 1) * 500;
-  const current = Math.max(0, (appData.points || 0) - prev);
-  const need = Math.max(1, next - prev);
-  const bar = $("v27LevelBar");
-  if (bar) bar.style.width = Math.min(100, Math.round((current / need) * 100)) + "%";
-  const txt = $("v27LevelText");
-  if (txt) txt.textContent = `${current} / ${need}`;
-  const badge = $("appVersionBadge");
-  if (badge) badge.textContent = APP_VERSION;
-}
-function applyTheme() {
-  document.body.classList.remove("theme-retro", "theme-blue");
-  const item = SHOP_ITEMS.find(i => i.id === appData.shop.activeTheme);
-  if (item?.className && item.className !== "theme-paper") document.body.classList.add(item.className);
+function tr(key) { return (T[language] || T.PL)[key] || key; }
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-const RULE_SECTIONS_PL = [
-  ["Podstawy", "Wybierz tryb, wersję gry i naciśnij duży przycisk Graj. Online tworzy pokój przez link, Lokalnie działa na jednym urządzeniu, Bot gra przeciwko komputerowi."],
-  ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii."],
-  ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę. Jeśli wskazana plansza jest zamknięta, wskazany gracz wybiera nową dostępną planszę."],
-  ["Chaos", "Działa tylko w Studenckim. Ukryty i Jawny zamieniają dwie niepuste, nieprzejęte plansze. Brutalny działa losowo w zakresie 5-60 s i może: zamienić plansze, usunąć symbol albo zmienić symbol X/O na przeciwny."],
-  ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę, od razu dostaje jednorazową moc zamiany dwóch niepustych plansz."],
-  ["Nagła śmierć", "Gracz ma 5/10/15 sekund na akcję. Jeśli czas minie, traci ruch. W Studenckim system nie blokuje gry podczas wyboru planszy."],
-  ["Punkty", "Punkty naliczają się tylko za grę online i tylko raz za daną rundę. Lokalnie, bot i podglądy sklepu nie dodają punktów."],
-  ["Czat i pokoje", "Czat działa w obrębie pokoju. Pokoje publiczne pojawiają się na liście i można do nich dołączyć, jeśli mają wolne miejsce."],
-];
-const RULES_PL = RULE_SECTIONS_PL.map(([h, d]) => `${h}\n${d}`).join("\n\n");
-const RULE_SECTIONS_ENG = [
-  ["Basics", "Choose the mode, game version and press Play. Online creates a room by link, Local works on one device, Bot plays against the computer."],
-  ["Classic", "One 3x3 board. The player who gets three marks in one line wins."],
-  ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If the board is closed, the indicated player chooses another available board."],
-  ["Chaos", "Student mode only. Hidden and Visible swap two non-captured boards. Brutal uses a selected maximum random interval and can swap boards, remove a mark or flip X/O on one cell."],
-  ["First Blood", "The first player to capture a mini board immediately gets a one-time board-swap power."],
-  ["Sudden Death", "The player has 5/10/15 seconds. When time runs out, the action is lost and the turn moves on."],
-  ["Points", "Points are awarded only for online play, never for local mode, bot mode, shop preview or test effects."],
-  ["Chat and rooms", "Chat works inside a room. Public rooms appear on the list if there is a free slot."],
-];
-const RULES_ENG = RULE_SECTIONS_ENG.map(([h, d]) => `${h}\n${d}`).join("\n\n");
-function t(key) {
-  const pl = {
-    waiting: "Oczekiwanie na drugiego gracza...",
-    yourTurn: "Twoja tura",
-    opponentTurn: "Tura przeciwnika",
-    winner: "WYGRAŁ",
-    draw: "REMIS",
-    matchWinner: "WYGRYWA MECZ",
-    modeClassic: "Tryb: Classic",
-    modeStudent: "Tryb: Studencki",
-    timeLeft: "Czas",
-    chooseBoard: "wybiera planszę",
-    thenTurn: "potem tura",
-    firstBloodSelect: "Wybierz dwie plansze do zamiany",
-    firstBloodHolder: "Pierwsza krew",
-    firstBloodUse: "Użyj Pierwszej krwi",
-    firstBloodCancel: "Anuluj Pierwszą krew",
-    copied: "Skopiowano link",
-    notCopied: "Nie udało się skopiować",
-    disconnected: "Rozłączony",
-    chaosMode: "Tryb Chaos",
-    chaosIn: "za",
-    chaosWarning: "Chaos zamieni plansze",
-    rulesTitle: "INSTRUKCJA",
-    rematch: "Rewanż",
-    resetScore: "Zeruj punkty"
-  };
-  const eng = {
-    waiting: "Waiting for the second player...",
-    yourTurn: "Your turn",
-    opponentTurn: "Opponent's turn",
-    winner: "WINS",
-    draw: "DRAW",
-    matchWinner: "WINS THE MATCH",
-    modeClassic: "Mode: Classic",
-    modeStudent: "Mode: Student",
-    timeLeft: "Time",
-    chooseBoard: "chooses a board",
-    thenTurn: "then turn",
-    firstBloodSelect: "Choose two boards to swap",
-    firstBloodHolder: "First Blood",
-    firstBloodUse: "Use First Blood",
-    firstBloodCancel: "Cancel First Blood",
-    copied: "Link copied",
-    notCopied: "Could not copy",
-    disconnected: "Disconnected",
-    chaosMode: "Chaos Mode",
-    chaosIn: "in",
-    chaosWarning: "Chaos will swap boards",
-    rulesTitle: "INSTRUCTIONS",
-    rematch: "Rematch",
-    resetScore: "Reset score"
-  };
-  return (language === "ENG" ? eng : pl)[key] || key;
-}
-function serverNow() { return Date.now() + serverTimeOffsetMs; }
-function showToast(msg) {
+function toast(msg) {
   const el = $("toast");
   if (!el) return alert(msg);
   el.textContent = msg;
   el.classList.remove("hidden");
-  clearTimeout(window.__toast);
-  window.__toast = setTimeout(() => el.classList.add("hidden"), 2800);
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.add("hidden"), 2200);
 }
-function setView(view) {
-  ["menuView", "gameView", "instructionsView"].forEach(id => $(id)?.classList.add("hidden"));
-  if (view === "menu") $("menuView")?.classList.remove("hidden");
-  if (view === "game") $("gameView")?.classList.remove("hidden");
-  if (view === "instructions") $("instructionsView")?.classList.remove("hidden");
-  document.body.classList.toggle("in-game", view === "game");
+
+function showView(name) {
+  ["menuView", "gameView"].forEach(id => $(id)?.classList.add("hidden"));
+  $(name + "View")?.classList.remove("hidden");
 }
+
 function createBackgroundSymbols() {
-  const c = $("bgSymbols");
-  if (!c || c.children.length) return;
-  for (let i = 0; i < 16; i++) {
+  const root = $("bgSymbols");
+  if (!root || root.children.length) return;
+  for (let i = 0; i < 18; i++) {
     const el = document.createElement("div");
     el.className = "bg-symbol";
-    el.textContent = Math.random() > 0.5 ? "X" : "O";
-    el.style.left = `${Math.random() * 94}%`;
-    el.style.top = `${Math.random() * 94}%`;
-    el.style.setProperty("--dx", `${Math.random() * 80 - 40}px`);
-    el.style.setProperty("--dy", `${Math.random() * 80 - 40}px`);
-    el.style.animationDuration = `${2.5 + Math.random() * 3}s`;
-    c.appendChild(el);
+    el.textContent = Math.random() > .5 ? "X" : "O";
+    el.style.left = Math.random() * 96 + "%";
+    el.style.top = Math.random() * 96 + "%";
+    el.style.setProperty("--dx", (Math.random() * 70 - 35) + "px");
+    el.style.setProperty("--dy", (Math.random() * 70 - 35) + "px");
+    el.style.animationDuration = (3 + Math.random() * 2.8) + "s";
+    root.appendChild(el);
   }
 }
 
-function refreshMenu() {
-  document.querySelectorAll("[data-play]").forEach(b => b.classList.toggle("active", b.dataset.play === settings.playMode));
-  document.querySelectorAll("[data-version]").forEach(b => b.classList.toggle("active", b.dataset.version === settings.versionMode));
-  document.querySelectorAll("[data-special]").forEach(b => {
-    let on = false;
-    if (b.dataset.special === "chaos") on = settings.chaosMode;
-    if (b.dataset.special === "firstBlood") on = settings.firstBloodMode;
-    if (b.dataset.special === "sudden") on = settings.suddenDeath;
-    if (b.dataset.special === "alternate") on = settings.alternateStarter;
-    b.classList.toggle("active", on);
+function applyLanguage() {
+  document.documentElement.lang = language === "ENG" ? "en" : "pl";
+  $("langBtn").textContent = language === "PL" ? "ENG" : "PL";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    const text = tr(key);
+    if (el.tagName === "OPTION") el.textContent = text;
+    else el.textContent = text;
   });
-  $("advancedOptions")?.classList.toggle("hidden", false);
-  $("suddenDeathOptions")?.classList.toggle("hidden", !settings.suddenDeath);
-  $("chaosOptions")?.classList.toggle("hidden", !(settings.chaosMode && settings.versionMode === "student"));
-  $("chaosVisualOptions")?.classList.toggle("hidden", !(settings.chaosMode && settings.versionMode === "student"));
-  $("chaosBrutalIntervalOptions")?.classList.toggle("hidden", !(settings.chaosMode && settings.versionMode === "student" && settings.chaosVariant === "brutal"));
-  $("brutalIntervalBox")?.classList.toggle("hidden", !(settings.chaosMode && settings.versionMode === "student" && settings.chaosVariant === "brutal"));
-  document.querySelectorAll("[data-chaos-variant]").forEach(b => b.classList.toggle("active", b.dataset.chaosVariant === settings.chaosVariant));
-  document.querySelectorAll("[data-brutal-interval]").forEach(b => b.classList.toggle("active", parseInt(b.dataset.brutalInterval, 10) === settings.chaosBrutalInterval));
-  $("botDifficultyOptions")?.classList.toggle("hidden", settings.playMode !== "bot");
-  // Pokoje online są publiczne automatycznie, bez checkboxa.
-  $("roomNameWrap")?.classList.add("hidden");
-  document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
-  applyMenuLanguage();
+  $("roomNameInput").placeholder = language === "ENG" ? "Online room name" : "Nazwa pokoju online";
+  $("roomCodeInput").placeholder = language === "ENG" ? "Room code" : "Kod pokoju";
+  refreshMenu();
+  if (state) renderState();
 }
+
+function refreshMenu() {
+  document.querySelectorAll("[data-play]").forEach(btn => btn.classList.toggle("active", btn.dataset.play === settings.playMode));
+  document.querySelectorAll("[data-version]").forEach(btn => btn.classList.toggle("active", btn.dataset.version === settings.versionMode));
+  document.querySelectorAll("[data-special]").forEach(btn => {
+    let on = false;
+    if (btn.dataset.special === "sudden") on = settings.suddenDeath;
+    if (btn.dataset.special === "alternate") on = settings.alternateStarter;
+    if (btn.dataset.special === "chaos") on = settings.chaosMode;
+    if (btn.dataset.special === "firstBlood") on = settings.firstBloodMode;
+    btn.classList.toggle("active", on);
+    if ((btn.dataset.special === "chaos" || btn.dataset.special === "firstBlood") && settings.versionMode !== "student") {
+      btn.disabled = true;
+      btn.classList.remove("active");
+    } else {
+      btn.disabled = false;
+    }
+  });
+
+  $("botDifficultyWrap")?.classList.toggle("hidden", settings.playMode !== "bot");
+  $("timerWrap")?.classList.toggle("hidden", !settings.suddenDeath);
+  const studentChaos = settings.versionMode === "student" && settings.chaosMode;
+  $("chaosVariantWrap")?.classList.toggle("hidden", !studentChaos);
+  $("chaosIntervalWrap")?.classList.toggle("hidden", !(studentChaos && settings.chaosVariant === "brutal"));
+  $("roomNameInput")?.classList.toggle("hidden", settings.playMode !== "online");
+
+  if (settings.versionMode !== "student") {
+    settings.chaosMode = false;
+    settings.firstBloodMode = false;
+  }
+
+  $("targetScore").value = String(settings.targetScore);
+  $("moveTimeLimit").value = String(settings.moveTimeLimit);
+  $("botDifficulty").value = settings.botDifficulty;
+  $("chaosVariant").value = settings.chaosVariant;
+  $("chaosBrutalInterval").value = String(settings.chaosBrutalInterval);
+  $("roomNameInput").value = settings.roomName || "";
+
+  saveSettings();
+}
+
 function applySettingsFromControls() {
-  settings.targetScore = parseInt($("targetScore")?.value || "0", 10);
-  settings.moveTimeLimit = parseInt($("moveTimeLimit")?.value || "10", 10);
-  settings.chaosVariant = $("chaosVariant")?.value || "warned";
-  settings.chaosBrutalInterval = parseInt($("chaosBrutalInterval")?.value || "15", 10);
+  settings.targetScore = Number($("targetScore")?.value || 0);
+  settings.moveTimeLimit = Number($("moveTimeLimit")?.value || 10);
   settings.botDifficulty = $("botDifficulty")?.value || "normal";
-  settings.publicRoom = settings.playMode === "online";
-  settings.roomName = $("roomNameInput")?.value?.trim() || "";
+  settings.chaosVariant = $("chaosVariant")?.value || "warned";
+  settings.chaosBrutalInterval = Number($("chaosBrutalInterval")?.value || 30);
+  settings.roomName = ($("roomNameInput")?.value || "").trim();
+  saveSettings();
 }
+
 function createRoom() {
   applySettingsFromControls();
   socket.emit("create_room", {
@@ -332,94 +208,126 @@ function createRoom() {
     alternate_starter: settings.alternateStarter,
     sudden_death: settings.suddenDeath,
     move_time_limit: settings.moveTimeLimit,
-    chaos_enabled: settings.chaosMode,
+    chaos_enabled: settings.chaosMode && settings.versionMode === "student",
     chaos_variant: settings.chaosVariant,
     chaos_brutal_interval_sec: settings.chaosBrutalInterval,
-    first_blood_enabled: settings.firstBloodMode,
+    first_blood_enabled: settings.firstBloodMode && settings.versionMode === "student",
     bot_difficulty: settings.botDifficulty,
     public_room: settings.playMode === "online",
     room_name: settings.roomName
   });
 }
+
 function joinRoom(codeArg = null) {
-  const code = (codeArg || $("roomCodeInput")?.value || "").trim().toUpperCase();
-  if (!code) { showToast(language === "ENG" ? "Enter room code" : "Wpisz kod pokoju"); return; }
+  const code = String(codeArg || $("roomCodeInput")?.value || "").trim().toUpperCase();
+  if (!code) { toast(tr("enterCode")); return; }
   socket.emit("join_room_by_code", { client_id: clientId, code });
 }
-function requestPublicRooms() { socket.emit("list_public_rooms"); }
 
+function requestPublicRooms() {
+  socket.emit("list_public_rooms");
+}
+
+function serverNow() { return Date.now() + serverTimeOffsetMs; }
+function waitingForOnlineOpponent() {
+  return state?.play_mode === "online" && (state?.players_count || 0) < 2;
+}
 function getSecondsLeft() {
-  if (!state?.sudden_death || !state?.deadline_at || state?.game_over || state?.players_count < 2) return null;
+  if (!state?.sudden_death || !state?.deadline_at || state?.game_over || waitingForOnlineOpponent()) return null;
   return Math.max(0, Math.ceil((state.deadline_at - serverNow()) / 1000));
 }
 function withTimer(text) {
   const s = getSecondsLeft();
-  return s === null ? text : `${text} | ${t("timeLeft")}: ${s}s`;
+  return s === null ? text : `${text} | ${tr("timeLeft")}: ${s}s`;
 }
+
 function statusText() {
   if (!state) return "";
-  if (state.players_count < 2) {
-    const miss = state.disconnected_symbols?.length ? ` (${t("disconnected")}: ${state.disconnected_symbols.join(", ")})` : "";
-    return t("waiting") + miss;
+  if (waitingForOnlineOpponent()) {
+    const miss = state.disconnected_symbols?.length ? ` (${tr("disconnected")}: ${state.disconnected_symbols.join(", ")})` : "";
+    return tr("waiting") + miss;
   }
-  if (state.match_winner) return `${state.match_winner} ${t("matchWinner")}`;
-  if (state.winner) return `${t("winner")} ${state.winner}`;
-  if (state.draw) return t("draw");
-  if (state.version_mode === "student" && state.first_blood_pending) return `${t("firstBloodHolder")}: ${state.first_blood_holder} | ${t("firstBloodSelect")}`;
-  if (state.version_mode === "student" && state.choose_board_mode) return withTimer(`${state.chooser_player} ${t("chooseBoard")} | ${t("thenTurn")}: ${state.turn}`);
-  if (state.play_mode === "local") return withTimer(`Tura: ${state.turn}`);
-  if (state.play_mode === "bot" && state.turn === state.bot_symbol) return withTimer("Tura bota...");
-  if (state.turn === mySymbol) return withTimer(`${t("yourTurn")} (${mySymbol})`);
-  return withTimer(`${t("opponentTurn")} (${state.turn})`);
+  if (state.match_winner) return `${state.match_winner} ${tr("matchWinner")}`;
+  if (state.winner) return `${tr("winner")}: ${state.winner}`;
+  if (state.draw) return tr("draw");
+  if (state.version_mode === "student" && state.first_blood_pending) return `${tr("firstBlood")}: ${state.first_blood_holder}`;
+  if (state.version_mode === "student" && state.choose_board_mode) return withTimer(`${state.chooser_player} ${tr("chooseBoard")} | ${tr("thenTurn")}: ${state.turn}`);
+  if (state.play_mode === "local") return withTimer(`${tr("turn")}: ${state.turn}`);
+  if (state.play_mode === "bot" && state.turn === state.bot_symbol) return withTimer(tr("botTurn"));
+  if (state.turn === mySymbol) return withTimer(`${tr("yourTurn")} (${mySymbol})`);
+  return withTimer(`${tr("opponentTurn")} (${state.turn})`);
 }
-function drawWinLine(container, line) {
-  if (!line) return;
+
+function drawWinLine(container, line, className = "") {
+  if (!Array.isArray(line)) return;
   const key = line.join(",");
-  const m = {
+  const map = {
     "0,1,2": "row r0", "3,4,5": "row r1", "6,7,8": "row r2",
     "0,3,6": "col c0", "1,4,7": "col c1", "2,5,8": "col c2",
     "0,4,8": "diag d1", "2,4,6": "diag d2"
   };
-  if (!m[key]) return;
+  if (!map[key]) return;
   const el = document.createElement("div");
-  el.className = "win-line " + m[key];
+  el.className = "win-line " + map[key] + (className ? " " + className : "");
   container.appendChild(el);
 }
+
+function canActNow() {
+  if (!state || state.game_over || waitingForOnlineOpponent()) return false;
+  if (state.play_mode === "local") return true;
+  if (state.play_mode === "bot") {
+    if (state.version_mode === "student" && state.choose_board_mode) return state.chooser_player !== state.bot_symbol;
+    return state.turn !== state.bot_symbol;
+  }
+  if (state.version_mode === "student" && state.choose_board_mode) return state.chooser_player === mySymbol;
+  return state.turn === mySymbol;
+}
+
 function renderClassicBoard() {
-  const el = $("classicBoard");
-  if (!el) return;
-  el.innerHTML = "";
-  el.classList.remove("hidden");
-  $("studentBoard")?.classList.add("hidden");
+  const boardEl = $("classicBoard");
+  const studentEl = $("studentBoard");
+  if (!boardEl) return;
+  boardEl.innerHTML = "";
+  boardEl.classList.remove("hidden");
+  studentEl?.classList.add("hidden");
+
   const board = state.board || Array(9).fill("");
-  board.forEach((v, i) => {
+  board.forEach((value, index) => {
     const cell = document.createElement("button");
     cell.className = "cell";
-    cell.textContent = v;
-    const canAct = state.play_mode === "local" || (state.play_mode === "bot" && state.turn !== state.bot_symbol) || state.turn === mySymbol;
-    cell.disabled = !!v || state.game_over || !canAct || state.players_count < 2;
-    if (state.last_move === i) cell.classList.add("last");
-    if (state.win_line?.includes(i)) cell.classList.add("win");
-    cell.onclick = () => socket.emit("make_move", { index: i });
-    el.appendChild(cell);
+    if (value === "X") cell.classList.add("x");
+    if (value === "O") cell.classList.add("o");
+    cell.dataset.symbol = value || "";
+    cell.textContent = value;
+    if (state.last_move === index) cell.classList.add("last");
+    if (state.win_line?.includes(index)) cell.classList.add("win");
+    cell.disabled = Boolean(value) || !canActNow();
+    cell.addEventListener("click", () => socket.emit("make_move", { index }));
+    boardEl.appendChild(cell);
   });
-  drawWinLine(el, state.win_line);
+  drawWinLine(boardEl, state.win_line);
 }
-function isFirstBloodCandidate(b) {
-  return Array.isArray(state?.first_blood_candidates) && state.first_blood_candidates.includes(b);
+
+function isFirstBloodCandidate(board) {
+  return Array.isArray(state?.first_blood_candidates) && state.first_blood_candidates.includes(board);
 }
 function canUseFirstBlood() {
-  return !!(state?.version_mode === "student" && state?.first_blood_pending && (state.play_mode === "local" || state.first_blood_holder === mySymbol || (state.play_mode === "bot" && state.first_blood_holder === "X")));
+  return Boolean(state?.version_mode === "student" && state?.first_blood_pending && (
+    state.play_mode === "local" ||
+    state.first_blood_holder === mySymbol ||
+    (state.play_mode === "bot" && state.first_blood_holder === "X")
+  ));
 }
-function handleFirstBloodBoardClick(b) {
+function handleFirstBloodBoardClick(board) {
   if (!firstBloodSelecting) return false;
-  if (!isFirstBloodCandidate(b)) { showToast("Pierwsza krew: wybierz niepustą planszę"); return true; }
-  if (firstBloodSelectedBoards.includes(b)) firstBloodSelectedBoards = firstBloodSelectedBoards.filter(x => x !== b);
-  else {
+  if (!isFirstBloodCandidate(board)) { toast(language === "ENG" ? "Choose a non-empty board." : "Wybierz niepustą planszę."); return true; }
+  if (firstBloodSelectedBoards.includes(board)) {
+    firstBloodSelectedBoards = firstBloodSelectedBoards.filter(x => x !== board);
+  } else {
     if (firstBloodSelectedBoards.length >= 2) firstBloodSelectedBoards = [];
-    firstBloodSelectedBoards.push(b);
+    firstBloodSelectedBoards.push(board);
   }
-  if (firstBloodSelectedBoards.length >= 2) {
+  if (firstBloodSelectedBoards.length === 2) {
     socket.emit("use_first_blood_swap", { board_a: firstBloodSelectedBoards[0], board_b: firstBloodSelectedBoards[1] });
     firstBloodSelecting = false;
     firstBloodSelectedBoards = [];
@@ -427,536 +335,320 @@ function handleFirstBloodBoardClick(b) {
   renderState();
   return true;
 }
+
 function renderStudentBoard() {
   const boardEl = $("studentBoard");
+  const classicEl = $("classicBoard");
   if (!boardEl) return;
   boardEl.innerHTML = "";
   boardEl.classList.remove("hidden");
-  $("classicBoard")?.classList.add("hidden");
+  classicEl?.classList.add("hidden");
+
   const small = state.small_boards || Array.from({ length: 9 }, () => Array(9).fill(""));
   const big = state.big_board || Array(9).fill("");
   const winners = state.small_winners || {};
+
   for (let b = 0; b < 9; b++) {
-    const sb = document.createElement("div");
-    sb.className = "small-board";
-    if (firstBloodSelecting && isFirstBloodCandidate(b)) sb.classList.add("first-blood-candidate");
-    if (firstBloodSelectedBoards.includes(b)) sb.classList.add("first-blood-selected");
-    if (big[b]) sb.classList.add("closed");
-    else if (state.choose_board_mode) sb.classList.add("choose");
-    else if (state.active_board === b) sb.classList.add("active");
-    if (state.chaos_variant !== "brutal" && (state.chaos_warning_board === b || state.chaos_warning_pair?.includes(b))) sb.classList.add("chaos-warning");
-    sb.onclick = () => {
+    const smallBoard = document.createElement("div");
+    smallBoard.className = "small-board";
+
+    if (firstBloodSelecting && isFirstBloodCandidate(b)) smallBoard.classList.add("first-blood-candidate");
+    if (firstBloodSelectedBoards.includes(b)) smallBoard.classList.add("first-blood-selected");
+    if (big[b]) smallBoard.classList.add("closed");
+    else if (state.choose_board_mode) smallBoard.classList.add("choose");
+    else if (state.active_board === b) smallBoard.classList.add("active");
+
+    if (state.chaos_variant !== "brutal" && (state.chaos_warning_board === b || state.chaos_warning_pair?.includes(b))) {
+      smallBoard.classList.add("chaos-warning");
+    }
+
+    smallBoard.addEventListener("click", () => {
       if (handleFirstBloodBoardClick(b)) return;
-      if (state.choose_board_mode) socket.emit("choose_board", { board: b });
-    };
+      if (state.choose_board_mode && canActNow()) {
+        socket.emit("choose_board", { board: b });
+      }
+    });
+
     for (let c = 0; c < 9; c++) {
-      const val = small[b][c];
+      const value = small[b]?.[c] || "";
       const cell = document.createElement("button");
       cell.className = "small-cell";
-      cell.textContent = val;
-      if (state.last_move?.board === b && state.last_move?.cell === c) cell.classList.add("last");
-      const canAct = state.play_mode === "local" || (state.play_mode === "bot" && state.turn !== state.bot_symbol) || state.turn === mySymbol;
-      const canChoose = state.play_mode === "local" || (state.play_mode === "bot" && state.chooser_player !== state.bot_symbol) || state.chooser_player === mySymbol;
-      let disabled;
-      if (firstBloodSelecting && isFirstBloodCandidate(b)) disabled = false;
-      else if (state.choose_board_mode) disabled = state.game_over || state.players_count < 2 || !canChoose || !!big[b];
-      else disabled = !!val || state.game_over || state.players_count < 2 || !canAct || !!big[b] || state.active_board !== b;
-      cell.disabled = disabled;
-      cell.onclick = (ev) => {
+      if (value === "X") cell.classList.add("x");
+      if (value === "O") cell.classList.add("o");
+      cell.dataset.symbol = value || "";
+      cell.textContent = value;
+      const isLast = state.last_move && state.last_move.board === b && state.last_move.cell === c;
+      if (isLast) cell.classList.add("last");
+      const line = winners[String(b)]?.line || [];
+      if (line.includes(c)) cell.classList.add("win");
+      cell.disabled = Boolean(value) || Boolean(big[b]) || state.choose_board_mode || !canActNow() || (state.active_board !== null && state.active_board !== b);
+      cell.addEventListener("click", (ev) => {
         ev.stopPropagation();
         if (handleFirstBloodBoardClick(b)) return;
-        if (state.choose_board_mode) { socket.emit("choose_board", { board: b }); return; }
+        if (state.choose_board_mode) {
+          if (canActNow()) socket.emit("choose_board", { board: b });
+          return;
+        }
         socket.emit("make_move", { board: b, cell: c });
-      };
-      sb.appendChild(cell);
+      });
+      smallBoard.appendChild(cell);
     }
-    const w = winners[String(b)];
-    if (w?.line) drawWinLine(sb, w.line);
+
     if (big[b]) {
-      const g = document.createElement("div");
-      g.className = "big-symbol";
-      g.textContent = big[b];
-      sb.appendChild(g);
+      const symbol = document.createElement("div");
+      symbol.className = "big-symbol " + (big[b] === "X" ? "x" : "o");
+      symbol.textContent = big[b];
+      smallBoard.appendChild(symbol);
+      drawWinLine(smallBoard, winners[String(b)]?.line);
     }
-    boardEl.appendChild(sb);
+
+    boardEl.appendChild(smallBoard);
   }
-  drawWinLine(boardEl, state.win_line);
-  const line = boardEl.querySelector(".win-line");
-  if (line) line.classList.add("ultimate-win-line");
+
+  drawWinLine(boardEl, state.win_line, "ultimate-win-line");
 }
-function getChaosSecondsLeft() {
-  if (!state?.chaos_enabled || state?.game_over || state?.players_count < 2) return null;
-  const target = state.chaos_change_at || state.chaos_next_at;
-  if (!target) return null;
-  return Math.max(0, Math.ceil((target - serverNow()) / 1000));
-}
-function renderChaosAndFirstBloodInfo() {
-  const ci = $("chaosInfo"), fi = $("firstBloodInfo"), fb = $("firstBloodBtn");
-  ci?.classList.add("hidden"); fi?.classList.add("hidden"); fb?.classList.add("hidden");
-  if (!state) return;
-  if (state.version_mode === "student" && state.chaos_enabled && !state.game_over) {
-    const sec = getChaosSecondsLeft();
-    if (state.chaos_change_at) {
-      if (state.chaos_variant === "brutal") ci.textContent = `Brutalny chaos (${state.chaos_brutal_pending_effect || "losowy efekt"}) ${t("chaosIn")} ${sec}s`;
-      else {
-        const pair = state.chaos_warning_pair?.length === 2 ? `${state.chaos_warning_pair[0] + 1} ↔ ${state.chaos_warning_pair[1] + 1}` : "";
-        ci.textContent = `${t("chaosWarning")} ${pair} ${t("chaosIn")} ${sec}s`;
-      }
-      ci.classList.remove("hidden");
-    } else if (sec !== null) {
-      ci.textContent = `${t("chaosMode")}: ${sec}s`;
-      ci.classList.remove("hidden");
-    }
-  }
-  if (state.version_mode === "student" && state.first_blood_enabled) {
-    if (state.first_blood_holder) { fi.textContent = `${t("firstBloodHolder")}: ${state.first_blood_holder}`; fi.classList.remove("hidden"); }
-    if (canUseFirstBlood()) { fb.textContent = firstBloodSelecting ? t("firstBloodCancel") : t("firstBloodUse"); fb.classList.remove("hidden"); }
-    if (firstBloodSelecting) $("status").textContent = `${t("firstBloodSelect")} (${firstBloodSelectedBoards.length}/2)`;
-  }
-}
-function syncFirstBloodSelecting() {
-  if (canUseFirstBlood()) firstBloodSelecting = true;
-  else if (!state?.first_blood_pending) { firstBloodSelecting = false; firstBloodSelectedBoards = []; }
-}
-function renderEndPanel() {
-  const ep = $("endPanel"), em = $("endMessage"), sub = $("endSubMessage");
-  const rematch = $("rematchBtn");
-  const reset = $("resetScoreBtn");
-  if (!state?.game_over) {
-    ep?.classList.add("hidden");
-    ep?.classList.remove("winner-x", "winner-o", "draw");
-    rematch?.classList.add("hidden");
-    reset?.classList.add("hidden");
+
+function renderSpecialInfo() {
+  const chaos = $("chaosInfo");
+  const fb = $("firstBloodInfo");
+  if (!state || state.version_mode !== "student") {
+    chaos?.classList.add("hidden");
+    fb?.classList.add("hidden");
+    $("firstBloodBtn")?.classList.add("hidden");
     return;
   }
-  ep?.classList.remove("hidden", "winner-x", "winner-o", "draw");
-  rematch?.classList.remove("hidden");
-  reset?.classList.add("hidden");
-  if (state.match_winner) {
-    ep?.classList.add(state.match_winner === "X" ? "winner-x" : "winner-o");
-    em.textContent = `WYGRYWA ${state.match_winner}!`;
-    if (sub) sub.textContent = language === "ENG" ? "Match winner" : "Zwycięzca całego meczu";
-  } else if (state.winner) {
-    ep?.classList.add(state.winner === "X" ? "winner-x" : "winner-o");
-    em.textContent = `WYGRYWA ${state.winner}!`;
-    if (sub) sub.textContent = language === "ENG" ? "Round finished" : "Runda zakończona zwycięstwem";
-  } else if (state.draw) {
-    ep?.classList.add("draw");
-    em.textContent = language === "ENG" ? "DRAW!" : "REMIS!";
-    if (sub) sub.textContent = language === "ENG" ? "No one took the advantage" : "Nikt nie zdobył przewagi";
+
+  if (state.chaos_enabled) {
+    let text = tr("chaosInfo");
+    if (state.chaos_next_at) {
+      const seconds = Math.max(0, Math.ceil((state.chaos_next_at - serverNow()) / 1000));
+      text += `: ${seconds}s`;
+    }
+    if (state.chaos_warning_pair?.length) text += ` • ${state.chaos_warning_pair.map(x => x + 1).join(" ↔ ")}`;
+    chaos.textContent = text;
+    chaos.classList.remove("hidden");
+  } else {
+    chaos?.classList.add("hidden");
   }
+
+  if (state.first_blood_pending) {
+    fb.textContent = `${tr("firstBlood")}: ${state.first_blood_holder}`;
+    fb.classList.remove("hidden");
+  } else {
+    fb?.classList.add("hidden");
+  }
+
+  $("firstBloodBtn")?.classList.toggle("hidden", !canUseFirstBlood());
+}
+
+function renderEndPanel() {
+  const panel = $("endPanel");
+  if (!panel || !state) return;
+  const ended = Boolean(state.game_over || state.match_winner);
+  panel.classList.toggle("hidden", !ended);
+  if (!ended) return;
+
+  let title = "";
+  let text = "";
+  if (state.match_winner) {
+    title = `${state.match_winner} ${tr("matchWinner")}`;
+    text = `${state.scores?.X || 0} : ${state.scores?.O || 0}`;
+  } else if (state.winner) {
+    title = `${tr("winner")}: ${state.winner}`;
+    text = `${state.scores?.X || 0} : ${state.scores?.O || 0}`;
+  } else {
+    title = tr("draw");
+    text = `${state.scores?.X || 0} : ${state.scores?.O || 0}`;
+  }
+  $("endTitle").textContent = title;
+  $("endText").textContent = text;
 }
 
 function renderState() {
   if (!state) return;
-  syncFirstBloodSelecting();
+  $("roomCodeLabel").textContent = state.code || currentRoom || "—";
+  $("playerSymbol").textContent = state.play_mode === "local" ? "X/O" : (mySymbol || "—");
   $("scoreX").textContent = state.scores?.X ?? 0;
   $("scoreO").textContent = state.scores?.O ?? 0;
-  if ($("gameScoreX")) $("gameScoreX").textContent = state.scores?.X ?? 0;
-  if ($("gameScoreO")) $("gameScoreO").textContent = state.scores?.O ?? 0;
-  $("roomCode").textContent = state.code || "---";
-  $("playerSymbol").textContent = state.play_mode === "local" ? "X/O" : (state.play_mode === "bot" ? "X" : (mySymbol || "?"));
   $("status").textContent = statusText();
-  $("modeInfo").textContent = state.version_mode === "student" ? t("modeStudent") : t("modeClassic");
-  renderChaosAndFirstBloodInfo();
-  if (state.version_mode === "student") renderStudentBoard(); else renderClassicBoard();
+
+  if (state.version_mode === "student") renderStudentBoard();
+  else renderClassicBoard();
+
+  renderSpecialInfo();
   renderEndPanel();
-  processLocalProgressFromState();
-  const key = `${state.code}-${state.scores?.X}-${state.scores?.O}-${state.winner}-${state.match_winner}`;
-  if ((state.winner || state.match_winner) && key !== lastFireworkKey) {
-    lastFireworkKey = key;
-    launchFireworks();
-  }
 }
-function launchFireworks() {
-  const active = SHOP_ITEMS.find(i => i.id === appData.shop.activeEffect)?.id || "effect_confetti";
-  const colors = active === "effect_stars" ? ["gold", "orange", "yellow"] : active === "effect_paper" ? ["#2c6f9f", "#c94a32", "#d9a15b"] : ["red", "orange", "gold", "deepskyblue", "magenta", "limegreen"];
-  for (let b = 0; b < 7; b++) setTimeout(() => {
-    const cx = Math.random() * innerWidth, cy = Math.random() * innerHeight * .65;
-    for (let i = 0; i < 20; i++) {
-      const p = document.createElement("div");
-      p.className = "firework";
-      p.style.left = cx + "px"; p.style.top = cy + "px"; p.style.background = colors[Math.floor(Math.random() * colors.length)];
-      const a = (Math.PI * 2 * i) / 20, d = 50 + Math.random() * 90;
-      p.style.setProperty("--x", Math.cos(a) * d + "px");
-      p.style.setProperty("--y", Math.sin(a) * d + "px");
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 850);
-    }
-  }, b * 180);
-}
+
 function copyLink() {
-  const url = new URL(location.href);
-  if (currentRoom) url.searchParams.set("room", currentRoom);
-  navigator.clipboard?.writeText(url.toString()).then(() => showToast(t("copied"))).catch(() => showToast(t("notCopied")));
+  if (!currentRoom) { toast(tr("noRoom")); return; }
+  const url = `${location.origin}/?room=${currentRoom}`;
+  navigator.clipboard?.writeText(url).then(() => toast(tr("copied"))).catch(() => toast(url));
 }
 
-function applyMenuLanguage() {
-  const en = language === "ENG";
-  const setText = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
-  const setHTML = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
-  setText('[data-version="classic"] h3', en ? 'CLASSIC' : 'KLASYCZNY');
-  setHTML('[data-version="classic"] p', en ? 'Rules you know<br>and like.' : 'Zasady, które znasz<br>i lubisz.');
-  setText('[data-version="student"] h3', en ? 'STUDENT' : 'STUDENCKI');
-  setHTML('[data-version="student"] p', en ? 'No strict rules.<br>Only possibilities.' : 'Nie ma zasad.<br>Są tylko możliwości.');
-  setText('.paper-section-title', en ? 'CHAOS SETTINGS 🌀' : 'USTAWIENIA CHAOSU 🌀');
-  setText('[data-chaos-variant="hidden"] b', en ? 'HIDDEN' : 'UKRYTY');
-  setHTML('[data-chaos-variant="hidden"] small', en ? 'You do not know<br>what will happen.' : 'Nie wiesz,<br>co się wydarzy.');
-  setText('[data-chaos-variant="warned"] b', en ? 'VISIBLE' : 'JAWNY');
-  setHTML('[data-chaos-variant="warned"] small', en ? 'You know<br>what is coming.' : 'Wiesz,<br>co nadchodzi.');
-  setText('[data-chaos-variant="brutal"] b', en ? 'BRUTAL' : 'BRUTALNY');
-  setHTML('[data-chaos-variant="brutal"] small', en ? 'No warning.' : 'Bez ostrzeżenia.');
-  setText('#brutalIntervalBox p', en ? 'Brutal chaos happens randomly up to the selected max time.' : 'Brutalny chaos zadziała losowo do wybranego maksymalnego czasu.');
-  setText('.v27-ribbon', en ? 'SPECIAL RULES ⓘ' : 'ZASADY SPECJALNE ⓘ');
-  setText('[data-special="chaos"] span:nth-child(2)', 'CHAOS');
-  setText('[data-special="firstBlood"] span:nth-child(2)', en ? '1ST BLOOD' : '1. KREW');
-  setText('[data-special="sudden"] span:nth-child(2)', en ? 'DEATH' : 'NAGŁA ŚM.');
-  setText('[data-special="alternate"] span:nth-child(2)', en ? 'START' : 'START');
-  document.querySelector('[data-play="online"]') && (document.querySelector('[data-play="online"]').innerHTML = en ? '👥 ONLINE' : '👥 ONLINE');
-  document.querySelector('[data-play="bot"]') && (document.querySelector('[data-play="bot"]').innerHTML = en ? '🤖 BOT' : '🤖 BOT');
-  document.querySelector('[data-play="local"]') && (document.querySelector('[data-play="local"]').innerHTML = en ? '🏠 LOCAL' : '🏠 LOKALNIE');
-  const daily = document.querySelector('#dailyLoginBtn');
-  if (daily) daily.innerHTML = en ? '<b>+50 pts</b><span>login bonus</span>🎁' : '<b>+50 pkt</b><span>za logowanie</span>🎁';
-  setText('#settingsBtn', en ? 'SETTINGS' : 'USTAWIENIA');
-  document.querySelectorAll('[data-menu-lang]').forEach(btn => btn.classList.toggle('active', btn.dataset.menuLang === language));
-  const navMap = en ? {ranking:'RANKING', profil:'PROFILE', znajomi:'FRIENDS', nagrody:'REWARDS', sklep:'SHOP'} : {ranking:'RANKING', profil:'PROFIL', znajomi:'ZNAJOMI', nagrody:'NAGRODY', sklep:'SKLEP'};
-  document.querySelectorAll('.paper-nav-btn').forEach(btn => {
-    const label = btn.querySelector('span:last-child');
-    if (label && navMap[btn.dataset.nav]) label.textContent = navMap[btn.dataset.nav];
+function openModal(title, bodyHtml) {
+  $("modalTitle").textContent = title;
+  $("modalBody").innerHTML = bodyHtml;
+  $("modal").classList.remove("hidden");
+}
+function closeModal() {
+  $("modal").classList.add("hidden");
+}
+
+function rulesText() {
+  if (language === "ENG") return `CLASSIC\nGet three symbols in a row on one 3×3 board.\n\nSTUDENT\nThere are 9 small boards. Your cell decides which small board the opponent must play on next. If that target board is closed or full, the owner/indicated player chooses any available board. Win small boards to build a big three-in-a-row.\n\nSPECIAL RULES\nSudden death: if time runs out, the current action is skipped.\nChaos: in Student mode, boards can be swapped or modified.\nFirst Blood: the first captured small board lets its owner swap two non-empty boards.`;
+  return `KLASYCZNY\nUłóż trzy swoje symbole w jednej linii na planszy 3×3.\n\nSTUDENCKI\nMasz 9 małych plansz. Pole, na którym postawisz znak, wskazuje małą planszę dla przeciwnika. Jeśli ta plansza jest zamknięta lub pełna, wskazany gracz wybiera dowolną dostępną planszę. Wygrywasz małe plansze, żeby ułożyć linię na dużej planszy.\n\nZASADY SPECJALNE\nNagła śmierć: jeśli czas minie, aktualna akcja przepada.\nChaos: w Studenckim plansze mogą zostać zamienione albo zmodyfikowane.\nPierwsza krew: pierwsza zdobyta mała plansza daje właścicielowi możliwość zamiany dwóch niepustych plansz.`;
+}
+function openInstructions() {
+  openModal(tr("rulesTitle"), `<div class="rules-text">${esc(rulesText())}</div>`);
+}
+function openSettings() {
+  openModal(tr("modalSettings"), `
+    <label>
+      <span>${tr("language")}</span>
+      <select id="modalLang">
+        <option value="PL">Polski</option>
+        <option value="ENG">English</option>
+      </select>
+    </label>
+  `);
+  $("modalLang").value = language;
+  $("modalLang").addEventListener("change", () => {
+    language = $("modalLang").value;
+    localStorage.setItem(LANG_KEY, language);
+    applyLanguage();
+    openSettings();
   });
-  if ($('instructionsBtn')) $('instructionsBtn').textContent = en ? '📖 INSTRUCTIONS' : '📖 INSTRUKCJA';
-  if ($('joinRoomBtn')) $('joinRoomBtn').textContent = en ? 'JOIN' : 'DOŁĄCZ';
-}
-
-function applyLanguage() {
-  applyMenuLanguage();
-  if ($("rulesTitle")) $("rulesTitle").textContent = t("rulesTitle");
-  if ($("gameHelpTitle")) $("gameHelpTitle").textContent = t("rulesTitle");
-  if ($("rulesText")) $("rulesText").textContent = language === "PL" ? RULES_PL : RULES_ENG;
-  if ($("gameHelpText")) renderSegmentedRules($("gameHelpText"));
-  if ($("rematchBtn")) $("rematchBtn").textContent = t("rematch");
-  if ($("resetScoreBtn")) $("resetScoreBtn").textContent = t("resetScore");
-  if ($("langBtn")) $("langBtn").textContent = language === "PL" ? "ENG" : "PL";
-  document.documentElement.lang = language === "ENG" ? "en" : "pl";
-  const map = language === "ENG" ? {settingsBtn:"⚙ SETTINGS", instructionsBtn:"📖 INSTRUCTIONS", publicRoomsBtn:"🌍 ROOMS", joinRoomBtn:"JOIN", topGameHelpBtn:"📖 Instructions", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Chat", leaveBtn:"↩ Back to menu"} : {settingsBtn:"⚙ USTAWIENIA", instructionsBtn:"📖 INSTRUKCJA", publicRoomsBtn:"🌍 POKOJE", joinRoomBtn:"DOŁĄCZ", topGameHelpBtn:"📖 Instrukcja", topCopyLinkBtn:"🔗 Link", chatBtn:"💬 Czat", leaveBtn:"↩ Wróć do menu"};
-  Object.entries(map).forEach(([id, txt]) => { const el = $(id); if (el) el.childElementCount && id === "chatBtn" ? el.childNodes[0].nodeValue = txt + " " : el.textContent = txt; });
-  renderState();
-}
-function renderSegmentedRules(container) {
-  const sections = language === "ENG" ? RULE_SECTIONS_ENG : RULE_SECTIONS_PL;
-  container.innerHTML = sections.map(([h, d]) => `<article class="rule-segment"><h3>${esc(h)}</h3><p>${esc(d)}</p></article>`).join("");
-}
-function openGameHelp() {
-  applyLanguage();
-  $("gameHelpModal")?.classList.remove("hidden");
-}
-
-function processLocalProgressFromState() {
-  if (!state || !state.code) return;
-  const bigKey = JSON.stringify(state.big_board || []);
-  if (state.version_mode === "student" && bigKey !== lastKnownBigBoards) {
-    if (Array.isArray(state.big_board) && state.big_board.includes(mySymbol)) {
-      appData.stats.studentBoardsCaptured += 1;
-      awardAchievement("student_board");
-      saveData();
-    }
-    lastKnownBigBoards = bigKey;
-  }
-  if (!state.game_over) return;
-  const roundKey = `${state.code}|${state.scores?.X || 0}|${state.scores?.O || 0}|${state.winner || "draw"}|${state.draw ? "draw" : ""}`;
-  const processed = getProcessedRounds();
-  if (processed.has(roundKey)) return;
-  processed.add(roundKey);
-  saveProcessedRounds(processed);
-
-  appData.stats.played += 1;
-  awardAchievement("first_game");
-  if (state.chaos_enabled) { appData.stats.chaosGames += 1; awardAchievement("chaos_player"); }
-
-  const won = !!state.winner && (state.play_mode === "local" ? state.winner === "X" : state.winner === mySymbol);
-  const lost = !!state.winner && !won;
-  if (state.draw) appData.stats.draws += 1;
-  if (won) appData.stats.wins += 1;
-  if (lost) appData.stats.losses += 1;
-  if (state.play_mode === "bot" && won) { appData.stats.botWins += 1; awardAchievement("bot_win"); }
-
-  // Punkty tylko online, nigdy local/bot/test/sklep.
-  if (state.play_mode === "online") {
-    appData.stats.onlinePlayed += 1;
-    if (state.winner && state.winner === mySymbol) {
-      appData.stats.onlineWins += 1;
-      addPoints(100, "wygrana online");
-      awardAchievement("first_online_win");
-      if (appData.stats.onlineWins >= 3) awardAchievement("three_online_wins");
-      if (roomStartAt && Date.now() - roomStartAt < 90_000) awardAchievement("quick_match");
-    }
-  }
-  saveData();
-}
-
-function openFeatureModal(title, html) {
-  $("featureModalTitle").textContent = title;
-  $("featureModalBody").innerHTML = html;
-  $("featureModal")?.classList.remove("hidden");
-}
-function closeFeatureModal() { $("featureModal")?.classList.add("hidden"); }
-function renderRanking() {
-  const local = [
-    ["Kaper", 1540], ["Maja", 1280], ["Wojtek", 1120], ["Ola", 980], [appData.profileName || "Ty", appData.points || 0], ["Bartek", 720]
-  ].sort((a, b) => b[1] - a[1]);
-  const online = [["NovaX", 9850], ["TicMaster", 8720], ["XO_Genius", 7640], ["LittleFox", 6540], [appData.profileName || "Ty", appData.points || 0], ["GameOn", 5890]].sort((a,b)=>b[1]-a[1]);
-  const table = (rows) => rows.map((r, i) => `<div class="rank-row ${r[0] === appData.profileName ? "me" : ""}"><span>${i+1}</span><b>${esc(r[0])}</b><strong>${r[1]}</strong></div>`).join("");
-  openFeatureModal("🏆 RANKING", `<div class="feature-tabs"><button class="active">LOKALNY</button><button>ONLINE</button></div><h3>Ranking lokalny</h3>${table(local)}<h3>Ranking online</h3>${table(online)}<p class="paper-note-text">Online ranking jest gotowy wizualnie; globalną bazę można podłączyć później. Punkty naliczają się tylko za wygrane online.</p>`);
-}
-function renderProfile() {
-  openFeatureModal("👤 PROFIL", `
-    <div class="profile-head"><div class="profile-avatar-big">${esc(appData.avatar)}</div><div><input id="profileNameInput" value="${esc(appData.profileName)}" maxlength="24"/><p>Poziom ${appData.level} • ${appData.points} pkt</p></div></div>
-    <div class="profile-avatar-row">${["🙂","😎","🤖","🧠","🎓","🔥"].map(a=>`<button data-avatar="${a}" class="avatar-choice ${appData.avatar===a?'active':''}">${a}</button>`).join("")}</div>
-    <div class="stats-grid">
-      <div><b>${appData.stats.played}</b><span>Rozegrane</span></div>
-      <div><b>${appData.stats.wins}</b><span>Wygrane</span></div>
-      <div><b>${appData.stats.onlineWins}</b><span>Wygrane online</span></div>
-      <div><b>${appData.stats.draws}</b><span>Remisy</span></div>
-      <div><b>${appData.stats.botWins}</b><span>Wygrane z botem</span></div>
-      <div><b>${appData.stats.studentBoardsCaptured}</b><span>Plansze Studenckie</span></div>
-    </div>
-    <button id="saveProfileBtn" class="paper-action-btn">ZAPISZ PROFIL</button>`);
-  $("saveProfileBtn").onclick = () => { appData.profileName = $("profileNameInput").value.trim() || "GraczXO"; saveData(); renderProfile(); showToast("Profil zapisany"); };
-  document.querySelectorAll("[data-avatar]").forEach(btn => btn.onclick = () => { appData.avatar = btn.dataset.avatar; saveData(); renderProfile(); });
-}
-function renderFriends() {
-  const invite = currentRoom ? new URL(location.href) : null;
-  if (invite && currentRoom) { invite.searchParams.set("room", currentRoom); invite.searchParams.set("friend", appData.profileName || "GraczXO"); }
-  openFeatureModal("👥 ZNAJOMI", `
-    <div class="friend-list">${appData.friends.map(f=>`<div class="friend-row"><span>👤</span><b>${esc(f.name)}</b><em>${esc(f.status)}</em></div>`).join("")}</div>
-    <div class="invite-box"><h3>Zaproś znajomego</h3><p>Wyślij link i grajcie razem.</p><input readonly value="${invite ? esc(invite.toString()) : 'Najpierw utwórz pokój'}"/><button id="copyInviteBtn" class="paper-action-btn">KOPIUJ LINK</button></div>
-    <div class="add-friend-box"><input id="friendNameInput" placeholder="Nazwa znajomego" maxlength="24"/><button id="addFriendBtn">DODAJ</button></div>`);
-  $("copyInviteBtn").onclick = copyLink;
-  $("addFriendBtn").onclick = () => { const name = $("friendNameInput").value.trim(); if(name){ appData.friends.push({name, status:"Offline"}); saveData(); renderFriends(); } };
-}
-function renderRewards() {
-  const today = new Date().toISOString().slice(0,10);
-  const canClaim = appData.rewards.lastDailyDate !== today;
-  const badges = ACHIEVEMENTS.map(a => `<div class="badge-card ${appData.achievements[a.id]?'unlocked':'locked'}"><span>${a.icon}</span><b>${esc(a.title)}</b><small>${appData.achievements[a.id]?'Zdobyto':'Zablokowane'}</small></div>`).join("");
-  openFeatureModal("🎁 NAGRODY", `<h3>Odznaki</h3><div class="badges-grid">${badges}</div><h3>Bonus za wejście</h3><div class="daily-card"><p>Zamiast dziennej naklejki odbierasz punkty do sklepu.</p><b>+50 pkt za logowanie / kliknięcie</b><small>Seria: ${appData.rewards.streak || 0} • Odebrano: ${appData.rewards.dailyClaims || 0}</small><button id="claimDailyBtn" class="paper-action-btn" ${canClaim?'':'disabled'}>${canClaim?'ODBIERZ +50 PKT':'ODEBRANO DZISIAJ'}</button></div>`);
-  $("claimDailyBtn").onclick = () => { if(!canClaim) return; appData.rewards.lastDailyDate = today; appData.rewards.streak = (appData.rewards.streak || 0) + 1; appData.rewards.dailyClaims = (appData.rewards.dailyClaims || 0) + 1; addPoints(50, "bonus za logowanie"); saveData(); showToast("Odebrano +50 pkt"); renderRewards(); };
-}
-
-function renderShop() {
-  const byType = type => SHOP_ITEMS.filter(i => i.type === type).map(item => {
-    const owned = appData.shop.owned.includes(item.id);
-    const active = appData.shop.activeTheme === item.id || appData.shop.activeSkin === item.id || appData.shop.activeEffect === item.id;
-    return `<button class="shop-item ${owned?'owned':'locked'} ${active?'active':''}" data-shop="${item.id}"><span>${item.icon}</span><b>${esc(item.name)}</b><small>${owned ? (active?'Aktywne':'Posiadane') : item.price + ' pkt'}</small></button>`;
-  }).join("");
-  openFeatureModal("🏪 SKLEP", `<div class="shop-points">Masz: <b>${appData.points}</b> pkt</div><h3>Motywy</h3><div class="shop-grid">${byType('theme')}</div><h3>Skórki X/O</h3><div class="shop-grid">${byType('skin')}</div><h3>Efekty wygranej</h3><div class="shop-grid">${byType('effect')}</div><p class="paper-note-text">Punkty w normalnej grze zdobywasz tylko online. Ten przycisk jest tylko do testu sklepu.</p><button id="devAddPointsBtn" class="paper-action-btn dev-points-btn">+250 pkt TEST SKLEPU</button>`);
-  const devBtn = $("devAddPointsBtn");
-  if (devBtn) devBtn.onclick = () => { addPoints(250, "test sklepu"); saveData(); renderShop(); };
-  document.querySelectorAll("[data-shop]").forEach(btn => btn.onclick = () => buyOrActivateItem(btn.dataset.shop));
-}
-function buyOrActivateItem(id) {
-  const item = SHOP_ITEMS.find(i => i.id === id);
-  if (!item) return;
-  const owned = appData.shop.owned.includes(id);
-  if (!owned) {
-    if (appData.points < item.price) { showToast("Za mało punktów"); return; }
-    appData.points -= item.price;
-    appData.shop.owned.push(id);
-    awardAchievement("collector");
-  }
-  if (item.type === "theme") appData.shop.activeTheme = id;
-  if (item.type === "skin") appData.shop.activeSkin = id;
-  if (item.type === "effect") appData.shop.activeEffect = id;
-  saveData();
-  renderShop();
-}
-function renderSettings() {
-  openFeatureModal("⚙ USTAWIENIA", `<div class="settings-panel"><label>Język <select id="settingsLang"><option value="PL">Polski</option><option value="ENG">English</option></select></label><p class="paper-note-text">Na razie w ustawieniach zostawiamy tylko język. Poziom bota ustawiany jest tylko przy trybie Bot.</p><button id="resetLocalDataBtn" class="paper-danger-btn">RESETUJ DANE LOKALNE</button></div>`);
-  $("settingsLang").value = language;
-  $("settingsLang").onchange = () => { language = $("settingsLang").value; localStorage.setItem("xo_chaos_language", language); applyLanguage(); showToast(language === "ENG" ? "Language changed" : "Język zmieniony"); renderSettings(); };
-  $("resetLocalDataBtn").onclick = () => { if(confirm("Na pewno wyczyścić profil, punkty i lokalne statystyki?")){ localStorage.removeItem(DATA_KEY); localStorage.removeItem(PROCESSED_ROUNDS_KEY); appData = loadData(); saveData(); renderSettings(); } };
 }
 
 function renderPublicRooms(rooms = []) {
-  const rows = rooms.length ? rooms.map(r => `<div class="public-room-row"><div><b>${esc(r.name)}</b><span>${r.version_mode === 'student' ? 'Studencki' : 'Classic'} • ${r.players_count}/2${r.chaos_enabled?' • Chaos':''}</span></div><button data-join-public="${esc(r.code)}">DOŁĄCZ</button></div>`).join("") : `<p>Brak publicznych pokoi. Utwórz pokój ONLINE — będzie publiczny automatycznie.</p>`;
-  openFeatureModal("🌍 POKOJE PUBLICZNE", `<button id="refreshPublicRoomsBtn" class="paper-action-btn">ODŚWIEŻ</button><div class="public-rooms-list">${rows}</div>`);
-  $("refreshPublicRoomsBtn").onclick = requestPublicRooms;
-  document.querySelectorAll("[data-join-public]").forEach(btn => btn.onclick = () => joinRoom(btn.dataset.joinPublic));
+  const body = `
+    <button id="refreshPublicRoomsBtn" class="secondary-btn wide" type="button">${tr("refresh")}</button>
+    <div style="height:8px"></div>
+    ${rooms.length ? rooms.map(room => `
+      <div class="public-room-row">
+        <div>
+          <b>${esc(room.name || room.code)}</b>
+          <span>${esc(room.code)} • ${room.version_mode === "student" ? tr("student") : tr("classic")} • ${room.players_count || 0}/2${room.chaos_enabled ? " • Chaos" : ""}${room.first_blood_enabled ? " • First Blood" : ""}</span>
+        </div>
+        <button type="button" data-public-room="${esc(room.code)}">${tr("join")}</button>
+      </div>
+    `).join("") : `<p class="rules-text">${tr("noPublicRooms")}</p>`}
+  `;
+  openModal(tr("availableRooms"), body);
+  $("refreshPublicRoomsBtn")?.addEventListener("click", requestPublicRooms);
+  document.querySelectorAll("[data-public-room]").forEach(btn => btn.addEventListener("click", () => {
+    closeModal();
+    joinRoom(btn.dataset.publicRoom);
+  }));
 }
 
-function openChat() {
-  chatOpen = true;
-  unreadChat = 0;
-  updateChatBadge();
-  $("chatModal")?.classList.remove("hidden");
-  renderChatMessages();
-}
-function closeChat() { chatOpen = false; $("chatModal")?.classList.add("hidden"); }
-function renderChatMessages() {
-  const box = $("chatMessages");
-  if (!box || !state) return;
-  const messages = state.chat_messages || [];
-  box.innerHTML = messages.map(m => `<div class="chat-msg ${m.symbol === mySymbol ? 'mine' : ''}"><b>${esc(m.player_name || ('Gracz ' + m.symbol))}</b><p>${esc(m.text)}</p></div>`).join("");
-  box.scrollTop = box.scrollHeight;
-}
-function updateChatBadge() {
-  const badge = $("chatBadge");
-  if (!badge) return;
-  if (unreadChat > 0) { badge.textContent = String(unreadChat); badge.classList.remove("hidden"); }
-  else badge.classList.add("hidden");
-}
-function sendChat(text) {
-  if (!currentRoom) { showToast("Najpierw wejdź do pokoju"); return; }
-  socket.emit("send_chat_message", { text, player_name: appData.profileName });
-}
-
-function processFriendInviteFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const friend = (params.get("friend") || "").trim().slice(0, 24);
-  if (!friend) return;
-  const exists = appData.friends.some(f => f.name.toLowerCase() === friend.toLowerCase());
-  if (!exists && friend !== appData.profileName) {
-    appData.friends.push({ name: friend, status: "Online" });
-    saveData();
-    showToast("Dodano znajomego z linku: " + friend);
-  }
-}
-
-function initMenu() {
-  document.querySelectorAll("[data-play]").forEach(b => b.onclick = () => { settings.playMode = b.dataset.play; refreshMenu(); });
-  document.querySelectorAll("[data-version]").forEach(b => b.onclick = () => { settings.versionMode = b.dataset.version; refreshMenu(); });
-  document.querySelectorAll("[data-special]").forEach(b => b.onclick = () => {
-    const k = b.dataset.special;
-    if (k === "chaos") settings.chaosMode = !settings.chaosMode;
-    if (k === "firstBlood") settings.firstBloodMode = !settings.firstBloodMode;
-    if (k === "sudden") settings.suddenDeath = !settings.suddenDeath;
-    if (k === "alternate") settings.alternateStarter = !settings.alternateStarter;
-    refreshMenu();
-  });
-  document.querySelectorAll("[data-chaos-variant]").forEach(btn => btn.onclick = () => {
-    settings.chaosVariant = btn.dataset.chaosVariant;
-    const select = $("chaosVariant");
-    if (select) select.value = settings.chaosVariant;
-    refreshMenu();
-  });
-  document.querySelectorAll("[data-brutal-interval]").forEach(btn => btn.onclick = () => {
-    settings.chaosBrutalInterval = parseInt(btn.dataset.brutalInterval, 10);
-    const select = $("chaosBrutalInterval");
-    if (select) select.value = String(settings.chaosBrutalInterval);
-    refreshMenu();
-  });
-  const dailyBtn = $("dailyLoginBtn");
-  if (dailyBtn) dailyBtn.onclick = () => {
-    const today = new Date().toISOString().slice(0,10);
-    if (appData.rewards.lastDailyDate === today) { showToast("Bonus +50 pkt już odebrany dzisiaj"); return; }
-    appData.rewards.lastDailyDate = today;
-    appData.rewards.streak = (appData.rewards.streak || 0) + 1;
-    appData.rewards.dailyClaims = (appData.rewards.dailyClaims || 0) + 1;
-    addPoints(50, "bonus za logowanie");
-    saveData();
-  };
-
-  document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.onclick = () => {
-    language = btn.dataset.menuLang;
-    localStorage.setItem("xo_chaos_language", language);
-    applyLanguage();
-    refreshMenu();
-    showToast(language === "ENG" ? "Language changed" : "Język zmieniony");
-  });
-  $("v27DevPlusBtn")?.addEventListener("click", () => {
-    addPoints(250, "test sklepu");
-    saveData();
-  });
-  $("paperMainPlay").onclick = createRoom;
-  $("createRoomBtn").onclick = createRoom;
-  $("joinRoomBtn").onclick = () => joinRoom();
-  $("instructionsBtn").onclick = openGameHelp;
-  $("settingsBtn").onclick = renderSettings;
-  $("publicRoomsBtn").onclick = () => { requestPublicRooms(); renderPublicRooms([]); };
-  $("backFromInstructionsBtn").onclick = () => setView("menu");
-  $("leaveBtn").onclick = () => setView("menu");
-  $("topCopyLinkBtn").onclick = copyLink;
-  $("topGameHelpBtn").onclick = openGameHelp;
-  $("closeGameHelpBtn").onclick = () => $("gameHelpModal").classList.add("hidden");
-  $("chatBtn").onclick = openChat;
-  $("closeChatBtn").onclick = closeChat;
-  $("closeFeatureModalBtn").onclick = closeFeatureModal;
-  $("firstBloodBtn").onclick = () => { firstBloodSelecting = !firstBloodSelecting; firstBloodSelectedBoards = []; renderState(); };
-  $("rematchBtn").onclick = () => socket.emit("rematch");
-  $("resetScoreBtn").onclick = () => socket.emit("reset_score");
-  $("langBtn").onclick = () => { language = language === "PL" ? "ENG" : "PL"; localStorage.setItem("xo_chaos_language", language); applyLanguage(); };
-  ["targetScore", "moveTimeLimit", "chaosVariant", "chaosBrutalInterval", "botDifficulty", "roomNameInput"].forEach(id => $(id)?.addEventListener("change", applySettingsFromControls));
-  $("chatForm")?.addEventListener("submit", ev => { ev.preventDefault(); const input = $("chatInput"); const text = input.value.trim(); if (text) sendChat(text); input.value = ""; });
-
-  document.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => {
-    const nav = b.dataset.nav;
-    if (nav === "ranking") renderRanking();
-    if (nav === "profil") renderProfile();
-    if (nav === "znajomi") renderFriends();
-    if (nav === "nagrody") renderRewards();
-    if (nav === "sklep") renderShop();
-  });
-  refreshMenu();
+function init() {
+  createBackgroundSymbols();
   applyLanguage();
-  updateHeaderProfile();
-  applyTheme();
+  refreshMenu();
+
+  document.querySelectorAll("[data-play]").forEach(btn => btn.addEventListener("click", () => {
+    settings.playMode = btn.dataset.play;
+    refreshMenu();
+  }));
+  document.querySelectorAll("[data-version]").forEach(btn => btn.addEventListener("click", () => {
+    settings.versionMode = btn.dataset.version;
+    if (settings.versionMode !== "student") {
+      settings.chaosMode = false;
+      settings.firstBloodMode = false;
+    }
+    refreshMenu();
+  }));
+  document.querySelectorAll("[data-special]").forEach(btn => btn.addEventListener("click", () => {
+    const key = btn.dataset.special;
+    if (key === "sudden") settings.suddenDeath = !settings.suddenDeath;
+    if (key === "alternate") settings.alternateStarter = !settings.alternateStarter;
+    if (key === "chaos" && settings.versionMode === "student") settings.chaosMode = !settings.chaosMode;
+    if (key === "firstBlood" && settings.versionMode === "student") settings.firstBloodMode = !settings.firstBloodMode;
+    refreshMenu();
+  }));
+  ["targetScore", "moveTimeLimit", "botDifficulty", "chaosVariant", "chaosBrutalInterval", "roomNameInput"].forEach(id => {
+    $(id)?.addEventListener("change", () => { applySettingsFromControls(); refreshMenu(); });
+    $(id)?.addEventListener("input", applySettingsFromControls);
+  });
+
+  $("specialToggleBtn")?.addEventListener("click", () => $("specialPanel")?.classList.toggle("hidden"));
+  $("startBtn")?.addEventListener("click", createRoom);
+  $("joinRoomBtn")?.addEventListener("click", () => joinRoom());
+  $("publicRoomsBtn")?.addEventListener("click", () => { renderPublicRooms([]); requestPublicRooms(); });
+  $("instructionsBtn")?.addEventListener("click", openInstructions);
+  $("settingsBtn")?.addEventListener("click", openSettings);
+  $("gameHelpBtn")?.addEventListener("click", openInstructions);
+  $("copyLinkBtn")?.addEventListener("click", copyLink);
+  $("leaveBtn")?.addEventListener("click", () => {
+    showView("menu");
+    history.replaceState(null, "", "/");
+  });
+  $("firstBloodBtn")?.addEventListener("click", () => {
+    firstBloodSelecting = !firstBloodSelecting;
+    firstBloodSelectedBoards = [];
+    renderState();
+  });
+  $("rematchBtn")?.addEventListener("click", () => socket.emit("rematch"));
+  $("resetScoreBtn")?.addEventListener("click", () => socket.emit("reset_score"));
+  $("langBtn")?.addEventListener("click", () => {
+    language = language === "PL" ? "ENG" : "PL";
+    localStorage.setItem(LANG_KEY, language);
+    applyLanguage();
+  });
+  $("modalCloseBtn")?.addEventListener("click", closeModal);
+  $("modal")?.addEventListener("click", ev => { if (ev.target.id === "modal") closeModal(); });
+
+  const params = new URLSearchParams(location.search);
+  const room = params.get("room");
+  if (room) {
+    $("roomCodeInput").value = room.toUpperCase();
+    setTimeout(() => joinRoom(room), 350);
+  }
 }
 
 socket.on("room_created", data => {
   currentRoom = data.code;
   mySymbol = data.symbol;
-  roomStartAt = Date.now();
-  lastKnownBigBoards = "";
-  seenChatIds = new Set();
-  unreadChat = 0;
-  setView("game");
+  firstBloodSelecting = false;
+  firstBloodSelectedBoards = [];
+  showView("game");
   history.replaceState(null, "", `/?room=${data.code}`);
 });
+
 socket.on("room_joined", data => {
   currentRoom = data.code;
   mySymbol = data.symbol;
-  roomStartAt = Date.now();
-  lastKnownBigBoards = "";
-  seenChatIds = new Set();
-  unreadChat = 0;
-  setView("game");
+  firstBloodSelecting = false;
+  firstBloodSelectedBoards = [];
+  showView("game");
+  history.replaceState(null, "", `/?room=${data.code}`);
 });
+
 socket.on("room_state", newState => {
   if (typeof newState.server_now === "number") serverTimeOffsetMs = newState.server_now - Date.now();
   state = newState;
   renderState();
-  if (chatOpen) renderChatMessages();
 });
-socket.on("error_message", data => {
-  const msg = data.message || "Błąd";
-  if (/chaos|Chaos|Brutalny/i.test(msg)) return;
-  showToast(msg);
-});
+
 socket.on("public_rooms", data => renderPublicRooms(data.rooms || []));
-socket.on("chat_history", data => {
-  (data.messages || []).forEach(m => seenChatIds.add(m.id));
-});
-socket.on("room_chat_message", msg => {
-  if (seenChatIds.has(msg.id)) return;
-  seenChatIds.add(msg.id);
-  if (!state) return;
-  state.chat_messages = [...(state.chat_messages || []), msg].slice(-80);
-  if (!chatOpen && msg.symbol !== mySymbol) { unreadChat += 1; updateChatBadge(); showToast("Nowa wiadomość na czacie"); }
-  if (chatOpen) renderChatMessages();
+socket.on("error_message", data => {
+  const msg = data?.message || "Błąd";
+  if (/chaos|brutalny/i.test(msg)) return;
+  toast(msg);
 });
 
 setInterval(() => {
-  if (socket.connected && currentRoom && state?.version_mode === "student" && state?.chaos_enabled && !state?.game_over) socket.emit("chaos_ping", { code: currentRoom });
-  renderState();
+  if (socket.connected && currentRoom && state?.version_mode === "student" && state?.chaos_enabled && !state?.game_over) {
+    socket.emit("chaos_ping", { code: currentRoom });
+  }
+  if (state) renderState();
 }, 1000);
 
-window.addEventListener("load", () => {
-  createBackgroundSymbols();
-  processFriendInviteFromUrl();
-  initMenu();
-  const params = new URLSearchParams(location.search);
-  const room = params.get("room");
-  if (room) { $("roomCodeInput").value = room.toUpperCase(); setTimeout(() => joinRoom(), 400); }
-});
+window.addEventListener("load", init);
+
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js").catch(() => {}));
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+  });
 }
