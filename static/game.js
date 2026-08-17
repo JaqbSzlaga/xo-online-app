@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v32-art";
+const APP_VERSION = "v35-readable-instructions";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -53,25 +53,58 @@ let settings = {
   roomName: ""
 };
 
-const ACHIEVEMENTS = [];
+const ACHIEVEMENTS = [
+  { id: "first_game", icon: "🎲", title: "Pierwsza gra", desc: "Zagraj pierwszą rundę." },
+  { id: "first_online_win", icon: "🏆", title: "Pierwsza wygrana online", desc: "Wygraj rundę online." },
+  { id: "quick_match", icon: "⚡", title: "Szybki mecz", desc: "Wygraj online w krótkim czasie." },
+  { id: "student_board", icon: "🎓", title: "Plansza Studencka", desc: "Zdobądź małą planszę w Studenckim." },
+  { id: "chaos_player", icon: "🌀", title: "Chaos opanowany", desc: "Zagraj rundę z Chaosem." },
+  { id: "bot_win", icon: "🤖", title: "Pogromca bota", desc: "Wygraj z botem." },
+  { id: "three_online_wins", icon: "🔥", title: "Seria online", desc: "Zdobądź 3 wygrane online." },
+  { id: "collector", icon: "🎁", title: "Kolekcjoner", desc: "Kup pierwszy element w sklepie." }
+];
 
-const SHOP_ITEMS = [];
+const SHOP_ITEMS = [
+  { id: "theme_paper", type: "theme", name: "Papierowy", price: 0, icon: "📜", className: "theme-paper" },
+  { id: "theme_retro", type: "theme", name: "Retro", price: 150, icon: "🕹️", className: "theme-retro" },
+  { id: "theme_blue", type: "theme", name: "Niebieski", price: 220, icon: "🔵", className: "theme-blue" },
+  { id: "skin_classic", type: "skin", name: "Klasyczne X/O", price: 0, icon: "XO" },
+  { id: "skin_marker", type: "skin", name: "Marker", price: 200, icon: "✍️" },
+  { id: "skin_neon", type: "skin", name: "Neon", price: 300, icon: "💡" },
+  { id: "effect_confetti", type: "effect", name: "Fajerwerki", price: 0, icon: "🎆" },
+  { id: "effect_stars", type: "effect", name: "Gwiazdki", price: 250, icon: "⭐" },
+  { id: "effect_paper", type: "effect", name: "Papierowe iskry", price: 300, icon: "✨" }
+];
 
 function defaultData() {
   return {
-    profileName: "Gracz",
+    profileName: "GraczXO",
     avatar: "🙂",
     points: 0,
     level: 1,
-    stats: {},
+    stats: {
+      played: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      onlineWins: 0,
+      onlinePlayed: 0,
+      botWins: 0,
+      studentBoardsCaptured: 0,
+      chaosGames: 0
+    },
     achievements: {},
-    friends: [],
-    rewards: {},
+    friends: [
+      { name: "Maja", status: "Online" },
+      { name: "Wojtek", status: "W grze" },
+      { name: "Bartek", status: "Offline" }
+    ],
+    rewards: { lastDailyDate: "", streak: 0, dailyClaims: 0 },
     shop: {
-      owned: [],
-      activeTheme: "",
-      activeSkin: "",
-      activeEffect: ""
+      owned: ["theme_paper", "skin_classic", "effect_confetti"],
+      activeTheme: "theme_paper",
+      activeSkin: "skin_classic",
+      activeEffect: "effect_confetti"
     }
   };
 }
@@ -95,51 +128,77 @@ function mergeDeep(base, override) {
 }
 let appData = loadData();
 function saveData() {
+  localStorage.setItem(DATA_KEY, JSON.stringify(appData));
   updateHeaderProfile();
+  applyTheme();
 }
 function getProcessedRounds() {
   try { return new Set(JSON.parse(localStorage.getItem(PROCESSED_ROUNDS_KEY) || "[]")); }
   catch { return new Set(); }
 }
 function saveProcessedRounds(set) {
-  // v31-clean: brak profilu, rankingu, punktów i nagród.
+  localStorage.setItem(PROCESSED_ROUNDS_KEY, JSON.stringify([...set].slice(-200)));
 }
 function awardAchievement(id) {
-  // v31-clean: nagrody/odznaki wyłączone.
+  if (!appData.achievements[id]) {
+    appData.achievements[id] = new Date().toISOString();
+    showToast("Odznaka zdobyta: " + (ACHIEVEMENTS.find(a => a.id === id)?.title || id));
+  }
 }
 function addPoints(amount, reason) {
-  // v31-clean: punkty wyłączone.
+  if (!amount || amount <= 0) return;
+  appData.points += amount;
+  const level = Math.max(1, Math.floor(appData.points / 500) + 1);
+  appData.level = level;
+  showToast(`+${amount} punktów${reason ? " — " + reason : ""}`);
 }
 function updateHeaderProfile() {
+  const p = $("paperPoints");
+  if (p) p.textContent = String(appData.points || 0);
+  const a = $("paperAvatar");
+  if (a) a.textContent = appData.avatar || "☺";
+  const name = $("v27ProfileName");
+  if (name) name.textContent = appData.profileName || "Ty";
+  const level = Math.max(1, appData.level || 1);
+  const badgeLevel = $("v27LevelBadge");
+  if (badgeLevel) badgeLevel.textContent = String(level);
+  const next = level * 500;
+  const prev = (level - 1) * 500;
+  const current = Math.max(0, (appData.points || 0) - prev);
+  const need = Math.max(1, next - prev);
+  const bar = $("v27LevelBar");
+  if (bar) bar.style.width = Math.min(100, Math.round((current / need) * 100)) + "%";
+  const txt = $("v27LevelText");
+  if (txt) txt.textContent = `${current} / ${need}`;
   const badge = $("appVersionBadge");
-  if (badge) badge.textContent = "v32-art";
+  if (badge) badge.textContent = APP_VERSION;
 }
 function applyTheme() {
   document.body.classList.remove("theme-retro", "theme-blue");
+  const item = SHOP_ITEMS.find(i => i.id === appData.shop.activeTheme);
+  if (item?.className && item.className !== "theme-paper") document.body.classList.add(item.className);
 }
 
 const RULE_SECTIONS_PL = [
-  ["Online", "Tworzysz pokój i wysyłasz link znajomemu albo czekasz w pokoju publicznym. Ruchy są synchronizowane przez serwer. Do gry potrzebnych jest dwóch graczy."],
-  ["Lokalnie", "Jedno urządzenie kontroluje oba symbole X i O. To tryb do gry na jednym telefonie albo do szybkiego testowania zasad bez drugiej osoby."],
-  ["Bot", "Grasz jako X przeciwko komputerowi O. Poziom bota ustawisz w opcjach. Bot działa w Classic i Studenckim."],
-  ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii: poziomo, pionowo albo po skosie."],
-  ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę dla przeciwnika. Jeśli wskazana plansza jest już wygrana albo zamknięta, wskazany gracz wybiera dowolną dostępną planszę."],
-  ["Chaos", "Zasada specjalna tylko dla Studenckiego. Co pewien czas gra miesza sytuację na planszach. Wariant Jawny ostrzega, Brutalny może mocniej zmienić sytuację."],
-  ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę w Studenckim, dostaje jednorazową moc zamiany dwóch plansz."],
-  ["Nagła śmierć", "Gracz ma ograniczony czas na ruch. Jeśli czas minie, traci akcję i gra przechodzi dalej."],
-  ["Pokoje i czat", "Pokoje publiczne są widoczne na liście, jeśli mają wolne miejsce. Czat działa tylko w obrębie aktualnego pokoju."]
+  ["Podstawy", "Wybierz tryb, wersję gry i naciśnij duży przycisk Graj. Online tworzy pokój przez link, Lokalnie działa na jednym urządzeniu, Bot gra przeciwko komputerowi."],
+  ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii."],
+  ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę. Jeśli wskazana plansza jest zamknięta, wskazany gracz wybiera nową dostępną planszę."],
+  ["Chaos", "Działa tylko w Studenckim. Ukryty i Jawny zamieniają dwie niepuste, nieprzejęte plansze. Brutalny działa losowo w zakresie 5-60 s i może: zamienić plansze, usunąć symbol albo zmienić symbol X/O na przeciwny."],
+  ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę, od razu dostaje jednorazową moc zamiany dwóch niepustych plansz."],
+  ["Nagła śmierć", "Gracz ma 5/10/15 sekund na akcję. Jeśli czas minie, traci ruch. W Studenckim system nie blokuje gry podczas wyboru planszy."],
+  ["Punkty", "Punkty naliczają się tylko za grę online i tylko raz za daną rundę. Lokalnie, bot i podglądy sklepu nie dodają punktów."],
+  ["Czat i pokoje", "Czat działa w obrębie pokoju. Pokoje publiczne pojawiają się na liście i można do nich dołączyć, jeśli mają wolne miejsce."],
 ];
 const RULES_PL = RULE_SECTIONS_PL.map(([h, d]) => `${h}\n${d}`).join("\n\n");
 const RULE_SECTIONS_ENG = [
-  ["Online", "Create a room and send the link to a friend, or wait in a public room. Moves are synchronized by the server. Two players are required."],
-  ["Local", "One device controls both X and O. Use it to play on one phone or quickly test the rules without another person."],
-  ["Bot", "You play as X against the computer O. Bot difficulty is available in the options. Bot works in Classic and Student."],
-  ["Classic", "One 3x3 board. The player who gets three marks in a row, column or diagonal wins."],
-  ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If that board is already won or closed, the indicated player chooses any available board."],
-  ["Chaos", "A special rule for Student only. From time to time the game changes the board situation. Visible chaos warns you, Brutal chaos can change more."],
-  ["First Blood", "The first player to capture a mini board in Student gets a one-time power to swap two boards."],
-  ["Sudden Death", "The player has limited time to move. If time runs out, the action is lost and the game continues."],
-  ["Rooms and chat", "Public rooms appear on the list if there is a free slot. Chat works only inside the current room."]
+  ["Basics", "Choose the mode, game version and press Play. Online creates a room by link, Local works on one device, Bot plays against the computer."],
+  ["Classic", "One 3x3 board. The player who gets three marks in one line wins."],
+  ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If the board is closed, the indicated player chooses another available board."],
+  ["Chaos", "Student mode only. Hidden and Visible swap two non-captured boards. Brutal uses a selected maximum random interval and can swap boards, remove a mark or flip X/O on one cell."],
+  ["First Blood", "The first player to capture a mini board immediately gets a one-time board-swap power."],
+  ["Sudden Death", "The player has 5/10/15 seconds. When time runs out, the action is lost and the turn moves on."],
+  ["Points", "Points are awarded only for online play, never for local mode, bot mode, shop preview or test effects."],
+  ["Chat and rooms", "Chat works inside a room. Public rooms appear on the list if there is a free slot."],
 ];
 const RULES_ENG = RULE_SECTIONS_ENG.map(([h, d]) => `${h}\n${d}`).join("\n\n");
 function t(key) {
@@ -207,13 +266,11 @@ function showToast(msg) {
   window.__toast = setTimeout(() => el.classList.add("hidden"), 2800);
 }
 function setView(view) {
-  ["menuView", "roomSetupView", "gameView", "instructionsView"].forEach(id => $(id)?.classList.add("hidden"));
+  ["menuView", "gameView", "instructionsView"].forEach(id => $(id)?.classList.add("hidden"));
   if (view === "menu") $("menuView")?.classList.remove("hidden");
-  if (view === "roomSetup") $("roomSetupView")?.classList.remove("hidden");
   if (view === "game") $("gameView")?.classList.remove("hidden");
   if (view === "instructions") $("instructionsView")?.classList.remove("hidden");
   document.body.classList.toggle("in-game", view === "game");
-  document.body.classList.toggle("in-room-setup", view === "roomSetup");
 }
 function createBackgroundSymbols() {
   const c = $("bgSymbols");
@@ -229,13 +286,6 @@ function createBackgroundSymbols() {
     el.style.animationDuration = `${2.5 + Math.random() * 3}s`;
     c.appendChild(el);
   }
-}
-
-function syncHiddenModeControls() {
-  const play = $("playMode");
-  const version = $("versionMode");
-  if (play) play.value = settings.playMode;
-  if (version) version.value = settings.versionMode;
 }
 
 function refreshMenu() {
@@ -261,8 +311,6 @@ function refreshMenu() {
   // Pokoje online są publiczne automatycznie, bez checkboxa.
   $("roomNameWrap")?.classList.add("hidden");
   document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
-  syncHiddenModeControls();
-  updateRoomSetupCard();
   applyMenuLanguage();
 }
 function applySettingsFromControls() {
@@ -274,60 +322,6 @@ function applySettingsFromControls() {
   settings.publicRoom = settings.playMode === "online";
   settings.roomName = $("roomNameInput")?.value?.trim() || "";
 }
-
-function getSelectedModeLabel() {
-  const playMap = {
-    online: language === "ENG" ? "Online" : "Online",
-    local: language === "ENG" ? "Local" : "Lokalnie",
-    bot: language === "ENG" ? "Bot" : "Bot"
-  };
-  const versionMap = {
-    classic: language === "ENG" ? "Classic" : "Klasyczny",
-    student: language === "ENG" ? "Student" : "Studencki"
-  };
-  return `${playMap[settings.playMode] || "Online"} · ${versionMap[settings.versionMode] || "Klasyczny"}`;
-}
-
-function activeSpecialsLabel() {
-  const list = [];
-  if (settings.chaosMode && settings.versionMode === "student") list.push("Chaos");
-  if (settings.firstBloodMode && settings.versionMode === "student") list.push(language === "ENG" ? "First Blood" : "Pierwsza krew");
-  if (settings.suddenDeath) list.push(language === "ENG" ? "Sudden Death" : "Nagła śmierć");
-  if (settings.alternateStarter) list.push(language === "ENG" ? "Alternate start" : "Naprzemienny start");
-  return list.length ? list.join(" · ") : (language === "ENG" ? "No special rules" : "Bez zasad specjalnych");
-}
-
-function updateRoomSetupCard() {
-  const title = $("roomSetupTitle");
-  const summary = $("roomSetupSummary");
-  const rules = $("roomSetupRules");
-  const start = $("roomStartBtn");
-
-  if (title) title.textContent = language === "ENG" ? "ROOM CARD" : "KARTA POKOJU";
-  if (summary) summary.textContent = getSelectedModeLabel();
-  if (start) {
-    start.textContent = settings.playMode === "online"
-      ? (language === "ENG" ? "▶ CREATE ROOM" : "▶ UTWÓRZ POKÓJ")
-      : (language === "ENG" ? "▶ START GAME" : "▶ START GRY");
-  }
-  if (rules) {
-    rules.innerHTML = `
-      <article><b>${language === "ENG" ? "Selected mode" : "Wybrany tryb"}</b><span>${getSelectedModeLabel()}</span></article>
-      <article><b>${language === "ENG" ? "Special rules" : "Zasady specjalne"}</b><span>${activeSpecialsLabel()}</span></article>
-      <article><b>${language === "ENG" ? "What happens next?" : "Co dalej?"}</b><span>${settings.playMode === "online"
-        ? (language === "ENG" ? "The app creates a room card. Send the link or let someone join from public rooms." : "Aplikacja tworzy kartę pokoju. Wyślij link albo pozwól dołączyć z pokoi publicznych.")
-        : (language === "ENG" ? "The game starts on this device." : "Gra startuje na tym urządzeniu.")}</span></article>
-    `;
-  }
-}
-
-function openRoomSetup() {
-  applySettingsFromControls();
-  syncHiddenModeControls();
-  updateRoomSetupCard();
-  setView("roomSetup");
-}
-
 function createRoom() {
   applySettingsFromControls();
   socket.emit("create_room", {
@@ -355,21 +349,16 @@ function joinRoom(codeArg = null) {
 function requestPublicRooms() { socket.emit("list_public_rooms"); }
 
 function getSecondsLeft() {
-  if (!state?.sudden_death || !state?.deadline_at || state?.game_over || isWaitingForOnlineOpponent()) return null;
+  if (!state?.sudden_death || !state?.deadline_at || state?.game_over || state?.players_count < 2) return null;
   return Math.max(0, Math.ceil((state.deadline_at - serverNow()) / 1000));
 }
 function withTimer(text) {
   const s = getSecondsLeft();
   return s === null ? text : `${text} | ${t("timeLeft")}: ${s}s`;
 }
-
-function isWaitingForOnlineOpponent() {
-  return state?.play_mode === "online" && (state?.players_count || 0) < 2;
-}
-
 function statusText() {
   if (!state) return "";
-  if (isWaitingForOnlineOpponent()) {
+  if (state.players_count < 2) {
     const miss = state.disconnected_symbols?.length ? ` (${t("disconnected")}: ${state.disconnected_symbols.join(", ")})` : "";
     return t("waiting") + miss;
   }
@@ -408,7 +397,7 @@ function renderClassicBoard() {
     cell.className = "cell";
     cell.textContent = v;
     const canAct = state.play_mode === "local" || (state.play_mode === "bot" && state.turn !== state.bot_symbol) || state.turn === mySymbol;
-    cell.disabled = !!v || state.game_over || !canAct || isWaitingForOnlineOpponent();
+    cell.disabled = !!v || state.game_over || !canAct || state.players_count < 2;
     if (state.last_move === i) cell.classList.add("last");
     if (state.win_line?.includes(i)) cell.classList.add("win");
     cell.onclick = () => socket.emit("make_move", { index: i });
@@ -470,8 +459,8 @@ function renderStudentBoard() {
       const canChoose = state.play_mode === "local" || (state.play_mode === "bot" && state.chooser_player !== state.bot_symbol) || state.chooser_player === mySymbol;
       let disabled;
       if (firstBloodSelecting && isFirstBloodCandidate(b)) disabled = false;
-      else if (state.choose_board_mode) disabled = state.game_over || isWaitingForOnlineOpponent() || !canChoose || !!big[b];
-      else disabled = !!val || state.game_over || isWaitingForOnlineOpponent() || !canAct || !!big[b] || state.active_board !== b;
+      else if (state.choose_board_mode) disabled = state.game_over || state.players_count < 2 || !canChoose || !!big[b];
+      else disabled = !!val || state.game_over || state.players_count < 2 || !canAct || !!big[b] || state.active_board !== b;
       cell.disabled = disabled;
       cell.onclick = (ev) => {
         ev.stopPropagation();
@@ -496,7 +485,7 @@ function renderStudentBoard() {
   if (line) line.classList.add("ultimate-win-line");
 }
 function getChaosSecondsLeft() {
-  if (!state?.chaos_enabled || state?.game_over || isWaitingForOnlineOpponent()) return null;
+  if (!state?.chaos_enabled || state?.game_over || state?.players_count < 2) return null;
   const target = state.chaos_change_at || state.chaos_next_at;
   if (!target) return null;
   return Math.max(0, Math.ceil((target - serverNow()) / 1000));
@@ -580,16 +569,15 @@ function renderState() {
   }
 }
 function launchFireworks() {
-  const colors = ["#c94a32", "#2c6f9f", "#d9a15b", "#f59e0b"];
-  for (let b = 0; b < 5; b++) setTimeout(() => {
+  const active = SHOP_ITEMS.find(i => i.id === appData.shop.activeEffect)?.id || "effect_confetti";
+  const colors = active === "effect_stars" ? ["gold", "orange", "yellow"] : active === "effect_paper" ? ["#2c6f9f", "#c94a32", "#d9a15b"] : ["red", "orange", "gold", "deepskyblue", "magenta", "limegreen"];
+  for (let b = 0; b < 7; b++) setTimeout(() => {
     const cx = Math.random() * innerWidth, cy = Math.random() * innerHeight * .65;
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       const p = document.createElement("div");
       p.className = "firework";
-      p.style.left = cx + "px";
-      p.style.top = cy + "px";
-      p.style.background = colors[Math.floor(Math.random() * colors.length)];
-      const a = (Math.PI * 2 * i) / 16, d = 45 + Math.random() * 80;
+      p.style.left = cx + "px"; p.style.top = cy + "px"; p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const a = (Math.PI * 2 * i) / 20, d = 50 + Math.random() * 90;
       p.style.setProperty("--x", Math.cos(a) * d + "px");
       p.style.setProperty("--y", Math.sin(a) * d + "px");
       document.body.appendChild(p);
@@ -654,48 +642,162 @@ function applyLanguage() {
   Object.entries(map).forEach(([id, txt]) => { const el = $(id); if (el) el.childElementCount && id === "chatBtn" ? el.childNodes[0].nodeValue = txt + " " : el.textContent = txt; });
   renderState();
 }
+const RULE_ICONS = ["🎮", "❌⭕", "🎓", "🌀", "💧", "💀", "🏆", "💬"];
+
 function renderSegmentedRules(container) {
   const sections = language === "ENG" ? RULE_SECTIONS_ENG : RULE_SECTIONS_PL;
-  const activeIndex = Math.max(0, Math.min(Number(window.__activeRuleSegment || 0), sections.length - 1));
-  const [title, desc] = sections[activeIndex];
+  let activeIndex = Number.parseInt(container.dataset.activeRuleIndex || "0", 10);
+  if (!Number.isFinite(activeIndex) || activeIndex < 0 || activeIndex >= sections.length) activeIndex = 0;
 
+  container.classList.add("rules-browser-host");
   container.innerHTML = `
-    <div class="rules-tab-shell">
-      <div class="rules-tab-rail" role="tablist" aria-label="${language === "ENG" ? "Instruction sections" : "Sekcje instrukcji"}">
-        ${sections.map(([h], index) => `
-          <button type="button" role="tab" class="rules-tab ${index === activeIndex ? "active" : ""}" data-rule-tab="${index}">
-            <span>${esc(h)}</span>
-          </button>
-        `).join("")}
+    <div class="rules-browser" role="region" aria-label="${esc(t("rulesTitle"))}">
+      <div class="rules-nav-shell">
+        <button type="button" class="rules-arrow rules-arrow-prev" aria-label="${language === "ENG" ? "Previous section" : "Poprzednia sekcja"}">‹</button>
+        <div class="rules-tabs" role="tablist" aria-label="${language === "ENG" ? "Instruction sections" : "Sekcje instrukcji"}"></div>
+        <button type="button" class="rules-arrow rules-arrow-next" aria-label="${language === "ENG" ? "Next section" : "Następna sekcja"}">›</button>
       </div>
-      <div class="rules-tab-line">
-        ${sections.map((_, index) => `<span class="${index === activeIndex ? "active" : ""}"></span>`).join("")}
-      </div>
-    </div>
+      <div class="rules-swipe-hint">${language === "ENG" ? "Swipe left / right or use the arrows" : "Przesuń w lewo / prawo albo użyj strzałek"}</div>
+      <article class="rule-page" tabindex="0">
+        <div class="rule-page-icon" aria-hidden="true"></div>
+        <div class="rule-page-copy">
+          <div class="rule-page-kicker"></div>
+          <h3></h3>
+          <p></p>
+        </div>
+      </article>
+      <div class="rule-progress" aria-live="polite"></div>
+    </div>`;
 
-    <article class="rule-detail-card">
-      <h3>${esc(title)}</h3>
-      <p>${esc(desc)}</p>
-    </article>
-  `;
+  const tabs = container.querySelector(".rules-tabs");
+  const page = container.querySelector(".rule-page");
+  const icon = container.querySelector(".rule-page-icon");
+  const kicker = container.querySelector(".rule-page-kicker");
+  const title = container.querySelector(".rule-page h3");
+  const text = container.querySelector(".rule-page p");
+  const progress = container.querySelector(".rule-progress");
+  const prev = container.querySelector(".rules-arrow-prev");
+  const next = container.querySelector(".rules-arrow-next");
 
-  container.querySelectorAll("[data-rule-tab]").forEach(btn => {
-    btn.onclick = () => {
-      window.__activeRuleSegment = Number(btn.dataset.ruleTab);
-      renderSegmentedRules(container);
-    };
+  sections.forEach(([heading], index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "rules-tab";
+    button.setAttribute("role", "tab");
+    button.dataset.ruleIndex = String(index);
+    button.innerHTML = `<span aria-hidden="true">${RULE_ICONS[index] || "•"}</span><b>${esc(heading)}</b>`;
+    button.addEventListener("click", () => setActive(index, true));
+    tabs.appendChild(button);
   });
 
-  const activeBtn = container.querySelector(".rules-tab.active");
-  activeBtn?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  function setActive(index, centerTab = false) {
+    activeIndex = Math.max(0, Math.min(sections.length - 1, index));
+    container.dataset.activeRuleIndex = String(activeIndex);
+    const [heading, description] = sections[activeIndex];
+
+    icon.textContent = RULE_ICONS[activeIndex] || "•";
+    kicker.textContent = language === "ENG" ? `SECTION ${activeIndex + 1}` : `SEKCJA ${activeIndex + 1}`;
+    title.textContent = heading;
+    text.textContent = description;
+    progress.textContent = `${activeIndex + 1} / ${sections.length}`;
+
+    const tabButtons = [...tabs.querySelectorAll(".rules-tab")];
+    tabButtons.forEach((button, i) => {
+      const isActive = i === activeIndex;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-selected", isActive ? "true" : "false");
+      button.tabIndex = isActive ? 0 : -1;
+    });
+
+    prev.disabled = activeIndex === 0;
+    next.disabled = activeIndex === sections.length - 1;
+
+    if (centerTab) {
+      tabButtons[activeIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }
+
+  prev.addEventListener("click", () => setActive(activeIndex - 1, true));
+  next.addEventListener("click", () => setActive(activeIndex + 1, true));
+
+  tabs.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+      tabs.scrollLeft += event.deltaY;
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+  let swipeStartX = null;
+  page.addEventListener("pointerdown", (event) => {
+    swipeStartX = event.clientX;
+  });
+  page.addEventListener("pointerup", (event) => {
+    if (swipeStartX === null) return;
+    const delta = event.clientX - swipeStartX;
+    swipeStartX = null;
+    if (Math.abs(delta) < 48) return;
+    if (delta < 0) setActive(activeIndex + 1, true);
+    else setActive(activeIndex - 1, true);
+  });
+  page.addEventListener("pointercancel", () => { swipeStartX = null; });
+
+  page.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") { event.preventDefault(); setActive(activeIndex - 1, true); }
+    if (event.key === "ArrowRight") { event.preventDefault(); setActive(activeIndex + 1, true); }
+  });
+
+  setActive(activeIndex, false);
+  requestAnimationFrame(() => {
+    tabs.querySelector(".rules-tab.active")?.scrollIntoView({ block: "nearest", inline: "center" });
+  });
 }
 function openGameHelp() {
   applyLanguage();
   $("gameHelpModal")?.classList.remove("hidden");
+  requestAnimationFrame(() => $("gameHelpText")?.querySelector(".rule-page")?.focus({ preventScroll: true }));
 }
 
 function processLocalProgressFromState() {
-  // v31-clean: brak lokalnych statystyk, punktów, rankingu i nagród.
+  if (!state || !state.code) return;
+  const bigKey = JSON.stringify(state.big_board || []);
+  if (state.version_mode === "student" && bigKey !== lastKnownBigBoards) {
+    if (Array.isArray(state.big_board) && state.big_board.includes(mySymbol)) {
+      appData.stats.studentBoardsCaptured += 1;
+      awardAchievement("student_board");
+      saveData();
+    }
+    lastKnownBigBoards = bigKey;
+  }
+  if (!state.game_over) return;
+  const roundKey = `${state.code}|${state.scores?.X || 0}|${state.scores?.O || 0}|${state.winner || "draw"}|${state.draw ? "draw" : ""}`;
+  const processed = getProcessedRounds();
+  if (processed.has(roundKey)) return;
+  processed.add(roundKey);
+  saveProcessedRounds(processed);
+
+  appData.stats.played += 1;
+  awardAchievement("first_game");
+  if (state.chaos_enabled) { appData.stats.chaosGames += 1; awardAchievement("chaos_player"); }
+
+  const won = !!state.winner && (state.play_mode === "local" ? state.winner === "X" : state.winner === mySymbol);
+  const lost = !!state.winner && !won;
+  if (state.draw) appData.stats.draws += 1;
+  if (won) appData.stats.wins += 1;
+  if (lost) appData.stats.losses += 1;
+  if (state.play_mode === "bot" && won) { appData.stats.botWins += 1; awardAchievement("bot_win"); }
+
+  // Punkty tylko online, nigdy local/bot/test/sklep.
+  if (state.play_mode === "online") {
+    appData.stats.onlinePlayed += 1;
+    if (state.winner && state.winner === mySymbol) {
+      appData.stats.onlineWins += 1;
+      addPoints(100, "wygrana online");
+      awardAchievement("first_online_win");
+      if (appData.stats.onlineWins >= 3) awardAchievement("three_online_wins");
+      if (roomStartAt && Date.now() - roomStartAt < 90_000) awardAchievement("quick_match");
+    }
+  }
+  saveData();
 }
 
 function openFeatureModal(title, html) {
@@ -705,50 +807,79 @@ function openFeatureModal(title, html) {
 }
 function closeFeatureModal() { $("featureModal")?.classList.add("hidden"); }
 function renderRanking() {
-  showToast(language === "ENG" ? "Ranking removed in clean version." : "Ranking usunięty w wersji clean.");
+  const local = [
+    ["Kaper", 1540], ["Maja", 1280], ["Wojtek", 1120], ["Ola", 980], [appData.profileName || "Ty", appData.points || 0], ["Bartek", 720]
+  ].sort((a, b) => b[1] - a[1]);
+  const online = [["NovaX", 9850], ["TicMaster", 8720], ["XO_Genius", 7640], ["LittleFox", 6540], [appData.profileName || "Ty", appData.points || 0], ["GameOn", 5890]].sort((a,b)=>b[1]-a[1]);
+  const table = (rows) => rows.map((r, i) => `<div class="rank-row ${r[0] === appData.profileName ? "me" : ""}"><span>${i+1}</span><b>${esc(r[0])}</b><strong>${r[1]}</strong></div>`).join("");
+  openFeatureModal("🏆 RANKING", `<div class="feature-tabs"><button class="active">LOKALNY</button><button>ONLINE</button></div><h3>Ranking lokalny</h3>${table(local)}<h3>Ranking online</h3>${table(online)}<p class="paper-note-text">Online ranking jest gotowy wizualnie; globalną bazę można podłączyć później. Punkty naliczają się tylko za wygrane online.</p>`);
 }
 function renderProfile() {
-  showToast(language === "ENG" ? "Profile removed in clean version." : "Profil usunięty w wersji clean.");
+  openFeatureModal("👤 PROFIL", `
+    <div class="profile-head"><div class="profile-avatar-big">${esc(appData.avatar)}</div><div><input id="profileNameInput" value="${esc(appData.profileName)}" maxlength="24"/><p>Poziom ${appData.level} • ${appData.points} pkt</p></div></div>
+    <div class="profile-avatar-row">${["🙂","😎","🤖","🧠","🎓","🔥"].map(a=>`<button data-avatar="${a}" class="avatar-choice ${appData.avatar===a?'active':''}">${a}</button>`).join("")}</div>
+    <div class="stats-grid">
+      <div><b>${appData.stats.played}</b><span>Rozegrane</span></div>
+      <div><b>${appData.stats.wins}</b><span>Wygrane</span></div>
+      <div><b>${appData.stats.onlineWins}</b><span>Wygrane online</span></div>
+      <div><b>${appData.stats.draws}</b><span>Remisy</span></div>
+      <div><b>${appData.stats.botWins}</b><span>Wygrane z botem</span></div>
+      <div><b>${appData.stats.studentBoardsCaptured}</b><span>Plansze Studenckie</span></div>
+    </div>
+    <button id="saveProfileBtn" class="paper-action-btn">ZAPISZ PROFIL</button>`);
+  $("saveProfileBtn").onclick = () => { appData.profileName = $("profileNameInput").value.trim() || "GraczXO"; saveData(); renderProfile(); showToast("Profil zapisany"); };
+  document.querySelectorAll("[data-avatar]").forEach(btn => btn.onclick = () => { appData.avatar = btn.dataset.avatar; saveData(); renderProfile(); });
 }
 function renderFriends() {
-  showToast(language === "ENG" ? "Friends removed in clean version." : "Znajomi usunięci w wersji clean.");
+  const invite = currentRoom ? new URL(location.href) : null;
+  if (invite && currentRoom) { invite.searchParams.set("room", currentRoom); invite.searchParams.set("friend", appData.profileName || "GraczXO"); }
+  openFeatureModal("👥 ZNAJOMI", `
+    <div class="friend-list">${appData.friends.map(f=>`<div class="friend-row"><span>👤</span><b>${esc(f.name)}</b><em>${esc(f.status)}</em></div>`).join("")}</div>
+    <div class="invite-box"><h3>Zaproś znajomego</h3><p>Wyślij link i grajcie razem.</p><input readonly value="${invite ? esc(invite.toString()) : 'Najpierw utwórz pokój'}"/><button id="copyInviteBtn" class="paper-action-btn">KOPIUJ LINK</button></div>
+    <div class="add-friend-box"><input id="friendNameInput" placeholder="Nazwa znajomego" maxlength="24"/><button id="addFriendBtn">DODAJ</button></div>`);
+  $("copyInviteBtn").onclick = copyLink;
+  $("addFriendBtn").onclick = () => { const name = $("friendNameInput").value.trim(); if(name){ appData.friends.push({name, status:"Offline"}); saveData(); renderFriends(); } };
 }
 function renderRewards() {
-  showToast(language === "ENG" ? "Rewards removed in clean version." : "Nagrody usunięte w wersji clean.");
+  const today = new Date().toISOString().slice(0,10);
+  const canClaim = appData.rewards.lastDailyDate !== today;
+  const badges = ACHIEVEMENTS.map(a => `<div class="badge-card ${appData.achievements[a.id]?'unlocked':'locked'}"><span>${a.icon}</span><b>${esc(a.title)}</b><small>${appData.achievements[a.id]?'Zdobyto':'Zablokowane'}</small></div>`).join("");
+  openFeatureModal("🎁 NAGRODY", `<h3>Odznaki</h3><div class="badges-grid">${badges}</div><h3>Bonus za wejście</h3><div class="daily-card"><p>Zamiast dziennej naklejki odbierasz punkty do sklepu.</p><b>+50 pkt za logowanie / kliknięcie</b><small>Seria: ${appData.rewards.streak || 0} • Odebrano: ${appData.rewards.dailyClaims || 0}</small><button id="claimDailyBtn" class="paper-action-btn" ${canClaim?'':'disabled'}>${canClaim?'ODBIERZ +50 PKT':'ODEBRANO DZISIAJ'}</button></div>`);
+  $("claimDailyBtn").onclick = () => { if(!canClaim) return; appData.rewards.lastDailyDate = today; appData.rewards.streak = (appData.rewards.streak || 0) + 1; appData.rewards.dailyClaims = (appData.rewards.dailyClaims || 0) + 1; addPoints(50, "bonus za logowanie"); saveData(); showToast("Odebrano +50 pkt"); renderRewards(); };
 }
 
 function renderShop() {
-  showToast(language === "ENG" ? "Shop removed in clean version." : "Sklep usunięty w wersji clean.");
+  const byType = type => SHOP_ITEMS.filter(i => i.type === type).map(item => {
+    const owned = appData.shop.owned.includes(item.id);
+    const active = appData.shop.activeTheme === item.id || appData.shop.activeSkin === item.id || appData.shop.activeEffect === item.id;
+    return `<button class="shop-item ${owned?'owned':'locked'} ${active?'active':''}" data-shop="${item.id}"><span>${item.icon}</span><b>${esc(item.name)}</b><small>${owned ? (active?'Aktywne':'Posiadane') : item.price + ' pkt'}</small></button>`;
+  }).join("");
+  openFeatureModal("🏪 SKLEP", `<div class="shop-points">Masz: <b>${appData.points}</b> pkt</div><h3>Motywy</h3><div class="shop-grid">${byType('theme')}</div><h3>Skórki X/O</h3><div class="shop-grid">${byType('skin')}</div><h3>Efekty wygranej</h3><div class="shop-grid">${byType('effect')}</div><p class="paper-note-text">Punkty w normalnej grze zdobywasz tylko online. Ten przycisk jest tylko do testu sklepu.</p><button id="devAddPointsBtn" class="paper-action-btn dev-points-btn">+250 pkt TEST SKLEPU</button>`);
+  const devBtn = $("devAddPointsBtn");
+  if (devBtn) devBtn.onclick = () => { addPoints(250, "test sklepu"); saveData(); renderShop(); };
+  document.querySelectorAll("[data-shop]").forEach(btn => btn.onclick = () => buyOrActivateItem(btn.dataset.shop));
 }
 function buyOrActivateItem(id) {
-  // v31-clean: sklep wyłączony.
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  if (!item) return;
+  const owned = appData.shop.owned.includes(id);
+  if (!owned) {
+    if (appData.points < item.price) { showToast("Za mało punktów"); return; }
+    appData.points -= item.price;
+    appData.shop.owned.push(id);
+    awardAchievement("collector");
+  }
+  if (item.type === "theme") appData.shop.activeTheme = id;
+  if (item.type === "skin") appData.shop.activeSkin = id;
+  if (item.type === "effect") appData.shop.activeEffect = id;
+  saveData();
+  renderShop();
 }
 function renderSettings() {
-  openFeatureModal("⚙ " + (language === "ENG" ? "SETTINGS" : "USTAWIENIA"), `
-    <div class="settings-panel clean-settings">
-      <label>${language === "ENG" ? "Language" : "Język"}
-        <select id="settingsLang">
-          <option value="PL">Polski</option>
-          <option value="ENG">English</option>
-        </select>
-      </label>
-      <p class="paper-note-text">${language === "ENG" ? "Clean version: only language settings are kept." : "Wersja clean: zostawione są tylko ustawienia języka."}</p>
-      <button id="resetLocalDataBtn" class="paper-danger-btn">${language === "ENG" ? "CLEAR LOCAL CACHE" : "WYCZYŚĆ CACHE LOKALNY"}</button>
-    </div>
-  `);
+  openFeatureModal("⚙ USTAWIENIA", `<div class="settings-panel"><label>Język <select id="settingsLang"><option value="PL">Polski</option><option value="ENG">English</option></select></label><p class="paper-note-text">Na razie w ustawieniach zostawiamy tylko język. Poziom bota ustawiany jest tylko przy trybie Bot.</p><button id="resetLocalDataBtn" class="paper-danger-btn">RESETUJ DANE LOKALNE</button></div>`);
   $("settingsLang").value = language;
-  $("settingsLang").onchange = () => {
-    language = $("settingsLang").value;
-    localStorage.setItem("xo_chaos_language", language);
-    applyLanguage();
-    renderSettings();
-    showToast(language === "ENG" ? "Language changed" : "Język zmieniony");
-  };
-  $("resetLocalDataBtn").onclick = () => {
-    localStorage.removeItem(DATA_KEY);
-    localStorage.removeItem(PROCESSED_ROUNDS_KEY);
-    showToast(language === "ENG" ? "Local cache cleared" : "Wyczyszczono cache lokalny");
-  };
+  $("settingsLang").onchange = () => { language = $("settingsLang").value; localStorage.setItem("xo_chaos_language", language); applyLanguage(); showToast(language === "ENG" ? "Language changed" : "Język zmieniony"); renderSettings(); };
+  $("resetLocalDataBtn").onclick = () => { if(confirm("Na pewno wyczyścić profil, punkty i lokalne statystyki?")){ localStorage.removeItem(DATA_KEY); localStorage.removeItem(PROCESSED_ROUNDS_KEY); appData = loadData(); saveData(); renderSettings(); } };
 }
 
 function renderPublicRooms(rooms = []) {
@@ -780,15 +911,20 @@ function updateChatBadge() {
   else badge.classList.add("hidden");
 }
 function sendChat(text) {
-  if (!currentRoom) {
-    showToast(language === "ENG" ? "Join a room first" : "Najpierw wejdź do pokoju");
-    return;
-  }
-  socket.emit("send_chat_message", { text, player_name: "Gracz" });
+  if (!currentRoom) { showToast("Najpierw wejdź do pokoju"); return; }
+  socket.emit("send_chat_message", { text, player_name: appData.profileName });
 }
 
 function processFriendInviteFromUrl() {
-  // v31-clean: znajomi/profil wyłączone.
+  const params = new URLSearchParams(location.search);
+  const friend = (params.get("friend") || "").trim().slice(0, 24);
+  if (!friend) return;
+  const exists = appData.friends.some(f => f.name.toLowerCase() === friend.toLowerCase());
+  if (!exists && friend !== appData.profileName) {
+    appData.friends.push({ name: friend, status: "Online" });
+    saveData();
+    showToast("Dodano znajomego z linku: " + friend);
+  }
 }
 
 function initMenu() {
@@ -836,7 +972,7 @@ function initMenu() {
     addPoints(250, "test sklepu");
     saveData();
   });
-  $("paperMainPlay").onclick = openRoomSetup;
+  $("paperMainPlay").onclick = createRoom;
   $("createRoomBtn").onclick = createRoom;
   $("joinRoomBtn").onclick = () => joinRoom();
   $("instructionsBtn").onclick = openGameHelp;

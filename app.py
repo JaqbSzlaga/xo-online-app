@@ -387,8 +387,6 @@ def emit_room_state(room: GameRoom):
 
 def current_symbol(room: GameRoom, sid: str) -> Optional[str]:
     if room.play_mode == "local":
-        if room.version_mode == "student" and room.choose_board_mode and room.chooser_player:
-            return room.chooser_player
         return room.turn
     if room.play_mode == "bot":
         return "X"

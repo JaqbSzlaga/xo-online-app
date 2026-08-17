@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-    <title>XO Chaos Online — v32-art</title>
+    <title>XO Chaos Online — v35</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4dfb9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
     <link rel="manifest" href="/static/manifest.json" />
     <link rel="apple-touch-icon" href="/static/icon-192.png" />
     <link rel="icon" href="/static/icon-192.png" />
-    <link rel="stylesheet" href="/static/style.css?v=v32-art" />
+    <link rel="stylesheet" href="/static/style.css?v=v35" />
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body class="paper-template">
@@ -24,52 +24,80 @@
             <div class="score">O: <span id="scoreO">0</span></div>
         </header>
 
-        <section id="menuView" class="card menu-card v27-menu-card clean-menu-card v32-art-menu">
-            <div class="v32-hero">
-                <img class="v32-paper-note" src="/static/art/paper-note.svg" alt="" />
-                <div class="v32-doodle v32-doodle-left">×</div>
-                <div class="v32-doodle v32-doodle-right">↝</div>
-                <div class="v32-crown">♕</div>
-
-                <div class="v32-logo" aria-label="XO Chaos Online">
-                    <div class="v32-logo-xo"><span class="x">X</span><span class="o">O</span></div>
+        <section id="menuView" class="card menu-card v27-menu-card">
+            <div class="v27-menu-head">
+                <div class="v27-logo" aria-label="XO Chaos Online">
+                    <div><span class="v27-x">X</span><span class="v27-o">O</span></div>
                     <strong>CHAOS</strong>
                     <em>ONLINE</em>
                 </div>
 
-                <button type="button" class="v32-play-button" id="paperMainPlay" aria-label="Graj">
-                    <span class="v32-play-triangle"></span>
-                </button>
+                <div class="v27-profile-strip">
+                    <span class="v27-profile-avatar" id="paperAvatar">☺</span>
+                    <div class="v27-profile-main">
+                        <b id="v27ProfileName">Ty</b>
+                        <div class="v27-level-row"><span id="v27LevelBadge">1</span><i><u id="v27LevelBar"></u></i><small id="v27LevelText">0 / 500</small></div>
+                    </div>
+                    <div class="v27-points"><span>🏆</span><b id="paperPoints">0</b><small>pkt</small></div>
+                    <button type="button" id="v27DevPlusBtn" class="v27-plus" title="Test sklepu">+</button>
+                </div>
             </div>
 
-            <div class="v31-play-mode-panel v32-mode-panel" aria-label="Tryb gry">
-                <button type="button" class="v27-mode-btn active" data-play="online">👥 ONLINE</button>
-                <button type="button" class="v27-mode-btn" data-play="local">🏠 LOKALNIE</button>
-                <button type="button" class="v27-mode-btn" data-play="bot">🤖 BOT</button>
-            </div>
-
-            <div class="paper-version-grid v27-version-grid clean-version-grid v32-version-grid" aria-label="Wersja gry">
-                <button type="button" class="paper-version-card classic active v32-version-card" data-version="classic">
+            <div class="paper-version-grid v27-version-grid">
+                <button type="button" class="paper-version-card classic active" data-version="classic">
                     <h3>KLASYCZNY</h3>
-                    <p>Zasady, które<br>znasz i lubisz.</p>
-                    <img src="/static/art/classic-card.svg" alt="" />
+                    <div class="v27-card-art classic-art"><span>X</span><span>O</span><span>X</span><span></span><span>X</span><span></span><span>O</span><span></span><span>O</span></div>
+                    <p>Zasady, które znasz<br>i lubisz.</p>
                 </button>
-                <button type="button" class="paper-version-card student v32-version-card" data-version="student">
+                <button type="button" class="paper-version-card student" data-version="student">
                     <h3>STUDENCKI</h3>
-                    <p>Nie ma zasad.<br>Są możliwości.</p>
-                    <img src="/static/art/student-card.svg" alt="" />
+                    <div class="v27-student-art"><span>🎓</span><span>🥤</span></div>
+                    <p>Nie ma zasad.<br>Są tylko możliwości.</p>
                 </button>
             </div>
 
-            <div class="paper-ribbon-title v27-ribbon v32-ribbon">ZASADY SPECJALNE ⓘ</div>
-            <div class="paper-special-strip v27-special-strip v32-special-strip">
+            <div id="chaosVisualOptions" class="chaos-visual-options v27-chaos-panel hidden">
+                <div class="paper-section-title">USTAWIENIA CHAOSU 🌀</div>
+                <div class="chaos-variant-grid v27-chaos-grid">
+                    <button type="button" class="chaos-variant-card" data-chaos-variant="hidden">
+                        <span class="chaos-sample spiral">🌀</span>
+                        <b>UKRYTY</b>
+                        <small>Nie wiesz,<br>co się wydarzy.</small>
+                        <i class="v27-radio"></i>
+                    </button>
+                    <button type="button" class="chaos-variant-card" data-chaos-variant="warned">
+                        <span class="chaos-sample eye">👁️</span>
+                        <b>JAWNY</b>
+                        <small>Wiesz,<br>co nadchodzi.</small>
+                        <i class="v27-radio"></i>
+                    </button>
+                    <button type="button" class="chaos-variant-card brutal" data-chaos-variant="brutal">
+                        <span class="chaos-sample bolt">⚡</span>
+                        <b>BRUTALNY</b>
+                        <small>Bez ostrzeżenia.</small>
+                        <i class="v27-radio"></i>
+                    </button>
+                    <div id="brutalIntervalBox" class="brutal-interval-box hidden">
+                        <p>Brutalny chaos zadziała losowo do wybranego maksymalnego czasu.</p>
+                        <div class="brutal-interval-buttons">
+                            <button type="button" data-brutal-interval="15">15 s</button>
+                            <button type="button" data-brutal-interval="30" class="active">30 s</button>
+                            <button type="button" data-brutal-interval="45">45 s</button>
+                            <button type="button" data-brutal-interval="60">1 min</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="paper-ribbon-title v27-ribbon">ZASADY SPECJALNE ⓘ</div>
+            <div class="paper-special-strip v27-special-strip">
                 <button type="button" class="paper-special" data-special="chaos"><span class="paper-special-icon">🌀</span><span>CHAOS</span><span class="paper-switch"></span></button>
                 <button type="button" class="paper-special" data-special="firstBlood"><span class="paper-special-icon">💧</span><span>1. KREW</span><span class="paper-switch"></span></button>
                 <button type="button" class="paper-special" data-special="sudden"><span class="paper-special-icon">💀</span><span>NAGŁA ŚM.</span><span class="paper-switch"></span></button>
                 <button type="button" class="paper-special active alternate-special" data-special="alternate"><span class="paper-special-icon">🔄</span><span>START</span><span class="paper-switch"></span></button>
             </div>
 
-            <div id="advancedOptions" class="advanced-options v27-advanced v32-advanced hidden">
+            <div id="advancedOptions" class="advanced-options v27-advanced hidden">
                 <label>Tryb meczu
                     <select id="targetScore">
                         <option value="0">Bez limitu</option>
@@ -111,10 +139,30 @@
                 </label>
             </div>
 
-            <div class="clean-lower-grid v32-clean-list">
-                <button type="button" id="settingsBtn" class="v32-list-btn"><span>⚙</span><b>USTAWIENIA</b><i>›</i></button>
-                <button type="button" id="instructionsBtn" class="v32-list-btn"><span>📖</span><b>INSTRUKCJA</b><i>›</i></button>
+            <div class="v27-play-zone">
+                <button type="button" class="v27-mode-btn active" data-play="online">👥 ONLINE</button>
+                <button type="button" class="paper-play v27-main-play" id="paperMainPlay" aria-label="Graj"></button>
+                <button type="button" class="v27-mode-btn" data-play="bot">🤖 BOT</button>
             </div>
+            <button type="button" class="v27-local-btn" data-play="local">🏠 LOKALNIE</button>
+
+            <div class="v27-lower-grid v32-lower-grid">
+                <button type="button" id="publicRoomsBtn" class="v32-rooms-card" title="Pokoje publiczne"><span>🌍</span><b>POKOJE</b></button>
+                <div class="v27-settings-card v32-settings-card">
+                    <span>⚙</span>
+                    <b id="settingsBtn">USTAWIENIA</b>
+                    <div class="v27-lang-switch"><button type="button" data-menu-lang="PL" class="active">PL</button><button type="button" data-menu-lang="ENG">ENG</button></div>
+                </div>
+                <div class="daily-login-card v27-daily v32-daily" id="dailyLoginCard">
+                    <button type="button" id="dailyLoginBtn"><b>+50 pkt</b><span>za logowanie</span>🎁</button>
+                </div>
+            </div>
+
+            <div class="paper-join-box v27-join-box">
+                <input id="roomCodeInput" maxlength="8" placeholder="Kod pokoju" />
+                <button type="button" id="joinRoomBtn">DOŁĄCZ</button>
+            </div>
+            <button type="button" id="instructionsBtn" class="paper-wide-btn v27-instruction-btn v29-visible-instructions">📖 INSTRUKCJA</button>
 
             <div class="hidden-controls" aria-hidden="true">
                 <select id="playMode"><option value="online">Online</option><option value="local">Lokalnie</option><option value="bot">Bot</option></select>
@@ -123,40 +171,13 @@
                 <input type="checkbox" id="suddenDeath" />
                 <input type="checkbox" id="chaosMode" />
                 <input type="checkbox" id="firstBloodMode" />
-                <input id="roomCodeInput" maxlength="8" />
                 <button id="createRoomBtn" type="button">Utwórz pokój</button>
-                <button type="button" id="publicRoomsBtn">Pokoje publiczne</button>
             </div>
-        </section>
-
-        <section id="roomSetupView" class="card room-setup-card v32-room-card hidden">
-            <button type="button" id="backToMenuFromRoomBtn" class="v32-back-btn">‹ MENU</button>
-
-            <div class="v32-room-hero">
-                <div class="v32-room-icon">🎮</div>
-                <h2 id="roomSetupTitle">KARTA POKOJU</h2>
-                <p id="roomSetupSummary">Online · Klasyczny</p>
-            </div>
-
-            <div class="v32-room-actions">
-                <button type="button" id="roomStartBtn" class="v32-start-room-btn">▶ START / UTWÓRZ POKÓJ</button>
-                <button type="button" id="roomPublicRoomsBtn" class="v32-secondary-room-btn">🌍 POKOJE PUBLICZNE</button>
-            </div>
-
-            <div class="v32-room-code-box">
-                <label id="roomCodeLabel2">Masz kod pokoju?</label>
-                <div>
-                    <input id="roomCodeInput2" maxlength="8" placeholder="Kod pokoju" />
-                    <button type="button" id="joinRoomBtn2">DOŁĄCZ</button>
-                </div>
-            </div>
-
-            <div id="roomSetupRules" class="v32-room-rules"></div>
         </section>
 
         <section id="instructionsView" class="card hidden">
             <h2 id="rulesTitle">INSTRUKCJA</h2>
-            <div id="rulesText" class="rules"></div>
+            <div id="rulesText" class="rules segmented-rules"></div>
             <button id="backFromInstructionsBtn" class="main-btn secondary">Wróć</button>
         </section>
 
@@ -189,7 +210,16 @@
             </div>
         </section>
     </main>
-<div id="gameHelpModal" class="modal hidden">
+
+    <nav class="paper-bottom-nav" id="paperBottomNav">
+        <button type="button" class="paper-nav-btn" data-nav="ranking"><span>🏆</span><span>RANKING</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="profil"><span>👤</span><span>PROFIL</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="znajomi"><span>👥</span><span>ZNAJOMI</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="nagrody"><span>🎁</span><span>NAGRODY</span></button>
+        <button type="button" class="paper-nav-btn" data-nav="sklep"><span>🏪</span><span>SKLEP</span></button>
+    </nav>
+
+    <div id="gameHelpModal" class="modal hidden">
         <div class="modal-card paper-modal-card">
             <div class="modal-head"><h2 id="gameHelpTitle">INSTRUKCJA</h2><button id="closeGameHelpBtn" class="small-btn">×</button></div>
             <div id="gameHelpText" class="rules segmented-rules"></div>
@@ -220,8 +250,8 @@
         </div>
     </div>
 
-    <div id="appVersionBadge" class="version-badge">v32-art</div>
+    <div id="appVersionBadge" class="version-badge">v35-readable-instructions</div>
     <p id="toast" class="toast hidden"></p>
-    <script src="/static/game.js?v=v32-art"></script>
+    <script src="/static/game.js?v=v35"></script>
 </body>
 </html>

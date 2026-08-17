@@ -1,12 +1,8 @@
-const CACHE_NAME = "xo-online-pwa-v32-art-room-tabs";
+const CACHE_NAME = "xo-online-pwa-v35-readable-instructions";
 
 const STATIC_ASSETS = [
   "/",
   "/static/style.css",
-  "/static/art/student-card.svg",
-  "/static/art/classic-card.svg",
-  "/static/art/paper-note.svg",
-  "/static/art/paper-bg.svg",
   "/static/game.js",
   "/static/manifest.json",
   "/static/icon-192.png",
