@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 1000">
+<defs><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="4" seed="8"/><feColorMatrix type="saturate" values=".25"/><feComponentTransfer><feFuncA type="table" tableValues="0 .18"/></feComponentTransfer></filter></defs>
+<rect width="600" height="1000" fill="#f1d7aa"/>
+<rect x="18" y="18" width="564" height="964" rx="35" fill="#f7e7c5"/>
+<rect width="600" height="1000" filter="url(#n)" opacity=".85"/>
+<g opacity=".18" stroke="#b6935d" stroke-width="2">
+<path d="M40 120h520M40 170h520M40 220h520M40 270h520M40 320h520M40 370h520M40 420h520M40 470h520M40 520h520M40 570h520M40 620h520M40 670h520M40 720h520M40 770h520M40 820h520"/>
+</g>
+</svg>

@@ -1,42 +1,30 @@
-# XO Chaos Online — v31.1-clean
+# XO Chaos Online — v32-art
 
-## Co poprawia
+## Co dodaje
 
-- Dodany widoczny wybór wersji gry:
-  - Klasyczny
-  - Studencki
-- Tryby rozgrywki są czytelne:
-  - Online
-  - Lokalnie
-  - Bot
-- Instrukcja jest podzielona na segmenty:
-  - Online
-  - Lokalnie
-  - Bot
-  - Classic
-  - Studencki
-  - Chaos
-  - Pierwsza krew
-  - Nagła śmierć
-  - Pokoje i czat
-
-## Nadal usunięte
-
-- Profil
-- Ranking
-- Znajomi
-- Nagrody
-- Sklep
-- Punkty
-- Bonus logowania
+- Graficzny ekran główny w stylu papierowo-rysunkowym.
+- Grafiki SVG:
+  - papierowe tło,
+  - karteczka XO,
+  - kafelek Classic,
+  - kafelek Studencki.
+- Kliknięcie Play nie odpala gry pod menu.
+- Play otwiera osobną `Kartę pokoju`.
+- Z karty pokoju można:
+  - utworzyć pokój/start gry,
+  - wejść do pokoi publicznych,
+  - wpisać kod pokoju,
+  - wrócić do menu.
+- Instrukcja ma górny poziomy suwak/zakładki.
+- Po kliknięciu zakładki pokazuje się tylko instrukcja tego segmentu.
 
 ## Widoczna wersja
 
 ```text
-v31.1-clean
+v32-art
 ```
 
-## Wgraj/podmień
+## Podmień/dodaj
 
 ```text
 app.py
@@ -45,6 +33,10 @@ static/game.js
 static/style.css
 static/service-worker.js
 static/manifest.json
+static/art/paper-bg.svg
+static/art/paper-note.svg
+static/art/classic-card.svg
+static/art/student-card.svg
 README_CLEAN.md
 ```
 

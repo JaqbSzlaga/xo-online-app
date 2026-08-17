@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v31.1-clean";
+const APP_VERSION = "v32-art";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -112,7 +112,7 @@ function addPoints(amount, reason) {
 }
 function updateHeaderProfile() {
   const badge = $("appVersionBadge");
-  if (badge) badge.textContent = "v31.1-clean";
+  if (badge) badge.textContent = "v32-art";
 }
 function applyTheme() {
   document.body.classList.remove("theme-retro", "theme-blue");
@@ -207,11 +207,13 @@ function showToast(msg) {
   window.__toast = setTimeout(() => el.classList.add("hidden"), 2800);
 }
 function setView(view) {
-  ["menuView", "gameView", "instructionsView"].forEach(id => $(id)?.classList.add("hidden"));
+  ["menuView", "roomSetupView", "gameView", "instructionsView"].forEach(id => $(id)?.classList.add("hidden"));
   if (view === "menu") $("menuView")?.classList.remove("hidden");
+  if (view === "roomSetup") $("roomSetupView")?.classList.remove("hidden");
   if (view === "game") $("gameView")?.classList.remove("hidden");
   if (view === "instructions") $("instructionsView")?.classList.remove("hidden");
   document.body.classList.toggle("in-game", view === "game");
+  document.body.classList.toggle("in-room-setup", view === "roomSetup");
 }
 function createBackgroundSymbols() {
   const c = $("bgSymbols");
@@ -260,6 +262,7 @@ function refreshMenu() {
   $("roomNameWrap")?.classList.add("hidden");
   document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
   syncHiddenModeControls();
+  updateRoomSetupCard();
   applyMenuLanguage();
 }
 function applySettingsFromControls() {
@@ -271,6 +274,60 @@ function applySettingsFromControls() {
   settings.publicRoom = settings.playMode === "online";
   settings.roomName = $("roomNameInput")?.value?.trim() || "";
 }
+
+function getSelectedModeLabel() {
+  const playMap = {
+    online: language === "ENG" ? "Online" : "Online",
+    local: language === "ENG" ? "Local" : "Lokalnie",
+    bot: language === "ENG" ? "Bot" : "Bot"
+  };
+  const versionMap = {
+    classic: language === "ENG" ? "Classic" : "Klasyczny",
+    student: language === "ENG" ? "Student" : "Studencki"
+  };
+  return `${playMap[settings.playMode] || "Online"} · ${versionMap[settings.versionMode] || "Klasyczny"}`;
+}
+
+function activeSpecialsLabel() {
+  const list = [];
+  if (settings.chaosMode && settings.versionMode === "student") list.push("Chaos");
+  if (settings.firstBloodMode && settings.versionMode === "student") list.push(language === "ENG" ? "First Blood" : "Pierwsza krew");
+  if (settings.suddenDeath) list.push(language === "ENG" ? "Sudden Death" : "Nagła śmierć");
+  if (settings.alternateStarter) list.push(language === "ENG" ? "Alternate start" : "Naprzemienny start");
+  return list.length ? list.join(" · ") : (language === "ENG" ? "No special rules" : "Bez zasad specjalnych");
+}
+
+function updateRoomSetupCard() {
+  const title = $("roomSetupTitle");
+  const summary = $("roomSetupSummary");
+  const rules = $("roomSetupRules");
+  const start = $("roomStartBtn");
+
+  if (title) title.textContent = language === "ENG" ? "ROOM CARD" : "KARTA POKOJU";
+  if (summary) summary.textContent = getSelectedModeLabel();
+  if (start) {
+    start.textContent = settings.playMode === "online"
+      ? (language === "ENG" ? "▶ CREATE ROOM" : "▶ UTWÓRZ POKÓJ")
+      : (language === "ENG" ? "▶ START GAME" : "▶ START GRY");
+  }
+  if (rules) {
+    rules.innerHTML = `
+      <article><b>${language === "ENG" ? "Selected mode" : "Wybrany tryb"}</b><span>${getSelectedModeLabel()}</span></article>
+      <article><b>${language === "ENG" ? "Special rules" : "Zasady specjalne"}</b><span>${activeSpecialsLabel()}</span></article>
+      <article><b>${language === "ENG" ? "What happens next?" : "Co dalej?"}</b><span>${settings.playMode === "online"
+        ? (language === "ENG" ? "The app creates a room card. Send the link or let someone join from public rooms." : "Aplikacja tworzy kartę pokoju. Wyślij link albo pozwól dołączyć z pokoi publicznych.")
+        : (language === "ENG" ? "The game starts on this device." : "Gra startuje na tym urządzeniu.")}</span></article>
+    `;
+  }
+}
+
+function openRoomSetup() {
+  applySettingsFromControls();
+  syncHiddenModeControls();
+  updateRoomSetupCard();
+  setView("roomSetup");
+}
+
 function createRoom() {
   applySettingsFromControls();
   socket.emit("create_room", {
@@ -599,15 +656,38 @@ function applyLanguage() {
 }
 function renderSegmentedRules(container) {
   const sections = language === "ENG" ? RULE_SECTIONS_ENG : RULE_SECTIONS_PL;
+  const activeIndex = Math.max(0, Math.min(Number(window.__activeRuleSegment || 0), sections.length - 1));
+  const [title, desc] = sections[activeIndex];
+
   container.innerHTML = `
-    <div class="rules-intro-card">
-      <strong>${language === "ENG" ? "Choose the section you need" : "Instrukcja jest podzielona na tryby"}</strong>
-      <span>${language === "ENG" ? "Online, Local, Bot, Classic, Student and special rules are explained separately." : "Online, Lokalnie, Bot, Classic, Studencki i zasady specjalne są opisane osobno."}</span>
+    <div class="rules-tab-shell">
+      <div class="rules-tab-rail" role="tablist" aria-label="${language === "ENG" ? "Instruction sections" : "Sekcje instrukcji"}">
+        ${sections.map(([h], index) => `
+          <button type="button" role="tab" class="rules-tab ${index === activeIndex ? "active" : ""}" data-rule-tab="${index}">
+            <span>${esc(h)}</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="rules-tab-line">
+        ${sections.map((_, index) => `<span class="${index === activeIndex ? "active" : ""}"></span>`).join("")}
+      </div>
     </div>
-    <div class="rules-segment-grid">
-      ${sections.map(([h, d]) => `<article class="rule-segment clean-rule-segment"><h3>${esc(h)}</h3><p>${esc(d)}</p></article>`).join("")}
-    </div>
+
+    <article class="rule-detail-card">
+      <h3>${esc(title)}</h3>
+      <p>${esc(desc)}</p>
+    </article>
   `;
+
+  container.querySelectorAll("[data-rule-tab]").forEach(btn => {
+    btn.onclick = () => {
+      window.__activeRuleSegment = Number(btn.dataset.ruleTab);
+      renderSegmentedRules(container);
+    };
+  });
+
+  const activeBtn = container.querySelector(".rules-tab.active");
+  activeBtn?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
 }
 function openGameHelp() {
   applyLanguage();
@@ -756,7 +836,7 @@ function initMenu() {
     addPoints(250, "test sklepu");
     saveData();
   });
-  $("paperMainPlay").onclick = createRoom;
+  $("paperMainPlay").onclick = openRoomSetup;
   $("createRoomBtn").onclick = createRoom;
   $("joinRoomBtn").onclick = () => joinRoom();
   $("instructionsBtn").onclick = openGameHelp;

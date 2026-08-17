@@ -1,7 +1,7 @@
 {
   "name": "XO Chaos Online",
   "short_name": "XO Chaos",
-  "description": "XO Chaos Online — v31.1 clean: wybór Classic/Studencki i segmentowana instrukcja.",
+  "description": "XO Chaos Online — v32 art: graficzne menu, karta pokoju i instrukcja z suwakiem.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
