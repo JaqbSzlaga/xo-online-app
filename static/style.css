@@ -1837,3 +1837,178 @@ body.paper-template .app {
         grid-template-columns: 1fr 1fr !important;
     }
 }
+
+
+/* ===== v31.1-clean: visible Classic/Student + segmented instructions ===== */
+
+.clean-menu-card {
+    display: block !important;
+}
+
+.clean-menu-head {
+    margin-bottom: 8px !important;
+}
+
+.v31-play-mode-panel {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    margin: 12px 4px 14px !important;
+    border: 1px solid rgba(92,61,32,.20) !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    background: rgba(255,241,210,.80) !important;
+    box-shadow: var(--shadow-soft) !important;
+}
+
+.v31-play-mode-panel .v27-mode-btn {
+    border: 0 !important;
+    border-right: 1px solid rgba(92,61,32,.20) !important;
+    border-radius: 0 !important;
+    min-height: 52px !important;
+    padding: 10px 6px !important;
+    background: transparent !important;
+    color: var(--ink) !important;
+    font-weight: 950 !important;
+    box-shadow: none !important;
+}
+
+.v31-play-mode-panel .v27-mode-btn:last-child {
+    border-right: 0 !important;
+}
+
+.v31-play-mode-panel .v27-mode-btn.active {
+    background: linear-gradient(180deg,#357ba8,#1d5f8b) !important;
+    color: #fff9e9 !important;
+}
+
+.clean-version-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 8px 4px 18px !important;
+}
+
+.clean-version-grid .paper-version-card {
+    display: block !important;
+    min-height: 172px !important;
+    border-radius: 18px !important;
+    padding: 17px 14px !important;
+    text-align: left !important;
+    background: rgba(255,242,216,.90) !important;
+    border: 2px solid rgba(92,61,32,.18) !important;
+    box-shadow: var(--shadow-paper) !important;
+}
+
+.clean-version-grid .paper-version-card.active {
+    outline: 4px solid rgba(44,111,159,.25) !important;
+    box-shadow: 0 8px 22px rgba(44,111,159,.16) !important;
+}
+
+.clean-version-grid .paper-version-card.classic.active {
+    border-color: rgba(44,111,159,.80) !important;
+}
+
+.clean-version-grid .paper-version-card.student.active {
+    border-color: rgba(201,74,50,.80) !important;
+}
+
+.clean-version-grid .paper-version-card h3 {
+    margin: 0 0 10px !important;
+    font-size: clamp(22px, 6vw, 32px) !important;
+    font-weight: 950 !important;
+}
+
+.clean-version-grid .paper-version-card p {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1.28 !important;
+}
+
+.clean-version-grid .paper-card-doodle {
+    right: 10px !important;
+    bottom: 10px !important;
+    opacity: .82 !important;
+}
+
+.rules-intro-card {
+    display: grid;
+    gap: 4px;
+    padding: 12px 13px;
+    border-radius: 16px;
+    background: rgba(44,111,159,.10);
+    border: 1px solid rgba(44,111,159,.18);
+    color: var(--ink);
+    margin-bottom: 10px;
+}
+
+.rules-intro-card strong {
+    font-weight: 950;
+    color: var(--blue);
+}
+
+.rules-intro-card span {
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.rules-segment-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.clean-rule-segment {
+    position: relative;
+    padding-left: 16px !important;
+}
+
+.clean-rule-segment::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 5px;
+    border-radius: 999px;
+    background: var(--blue);
+}
+
+.clean-rule-segment:nth-child(5)::before,
+.clean-rule-segment:nth-child(6)::before,
+.clean-rule-segment:nth-child(7)::before {
+    background: var(--red);
+}
+
+.clean-rule-segment h3 {
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.clean-rule-segment p {
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+@media(max-width:420px){
+    .v31-play-mode-panel .v27-mode-btn {
+        font-size: 12px !important;
+        min-height: 48px !important;
+    }
+
+    .clean-version-grid {
+        gap: 8px !important;
+    }
+
+    .clean-version-grid .paper-version-card {
+        min-height: 156px !important;
+        padding: 14px 10px !important;
+    }
+
+    .clean-version-grid .paper-version-card h3 {
+        font-size: 22px !important;
+    }
+
+    .clean-version-grid .paper-version-card p {
+        font-size: 13px !important;
+    }
+}

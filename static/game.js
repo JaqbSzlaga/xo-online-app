@@ -1,5 +1,5 @@
 const socket = io();
-const APP_VERSION = "v31-clean";
+const APP_VERSION = "v31.1-clean";
 const CLIENT_ID_KEY = "xo_online_client_id";
 const DATA_KEY = "xo_chaos_profile_v25";
 const PROCESSED_ROUNDS_KEY = "xo_chaos_processed_rounds_v25";
@@ -112,30 +112,34 @@ function addPoints(amount, reason) {
 }
 function updateHeaderProfile() {
   const badge = $("appVersionBadge");
-  if (badge) badge.textContent = "v31-clean";
+  if (badge) badge.textContent = "v31.1-clean";
 }
 function applyTheme() {
   document.body.classList.remove("theme-retro", "theme-blue");
 }
 
 const RULE_SECTIONS_PL = [
-  ["Podstawy", "Wybierz tryb, wersję gry i naciśnij duży przycisk Graj. Online tworzy pokój przez link, Lokalnie działa na jednym urządzeniu, Bot gra przeciwko komputerowi."],
-  ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii."],
-  ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę. Jeśli wskazana plansza jest zamknięta, wskazany gracz wybiera nową dostępną planszę."],
-  ["Chaos", "Działa tylko w Studenckim. Ukryty i Jawny zamieniają dwie niepuste, nieprzejęte plansze. Brutalny działa losowo w zakresie 5-60 s i może: zamienić plansze, usunąć symbol albo zmienić symbol X/O na przeciwny."],
-  ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę, od razu dostaje jednorazową moc zamiany dwóch niepustych plansz."],
-  ["Nagła śmierć", "Gracz ma 5/10/15 sekund na akcję. Jeśli czas minie, traci ruch. W Studenckim system nie blokuje gry podczas wyboru planszy."],
-  ["Czat i pokoje", "Czat działa w obrębie pokoju. Pokoje publiczne pojawiają się na liście i można do nich dołączyć, jeśli mają wolne miejsce."],
+  ["Online", "Tworzysz pokój i wysyłasz link znajomemu albo czekasz w pokoju publicznym. Ruchy są synchronizowane przez serwer. Do gry potrzebnych jest dwóch graczy."],
+  ["Lokalnie", "Jedno urządzenie kontroluje oba symbole X i O. To tryb do gry na jednym telefonie albo do szybkiego testowania zasad bez drugiej osoby."],
+  ["Bot", "Grasz jako X przeciwko komputerowi O. Poziom bota ustawisz w opcjach. Bot działa w Classic i Studenckim."],
+  ["Classic", "Jedna plansza 3x3. Wygrywa gracz, który ułoży trzy symbole w jednej linii: poziomo, pionowo albo po skosie."],
+  ["Studencki", "Grasz na 9 małych planszach. Pole, które klikniesz, wskazuje następną planszę dla przeciwnika. Jeśli wskazana plansza jest już wygrana albo zamknięta, wskazany gracz wybiera dowolną dostępną planszę."],
+  ["Chaos", "Zasada specjalna tylko dla Studenckiego. Co pewien czas gra miesza sytuację na planszach. Wariant Jawny ostrzega, Brutalny może mocniej zmienić sytuację."],
+  ["Pierwsza krew", "Pierwszy gracz, który przejmie małą planszę w Studenckim, dostaje jednorazową moc zamiany dwóch plansz."],
+  ["Nagła śmierć", "Gracz ma ograniczony czas na ruch. Jeśli czas minie, traci akcję i gra przechodzi dalej."],
+  ["Pokoje i czat", "Pokoje publiczne są widoczne na liście, jeśli mają wolne miejsce. Czat działa tylko w obrębie aktualnego pokoju."]
 ];
 const RULES_PL = RULE_SECTIONS_PL.map(([h, d]) => `${h}\n${d}`).join("\n\n");
 const RULE_SECTIONS_ENG = [
-  ["Basics", "Choose the mode, game version and press Play. Online creates a room by link, Local works on one device, Bot plays against the computer."],
-  ["Classic", "One 3x3 board. The player who gets three marks in one line wins."],
-  ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If the board is closed, the indicated player chooses another available board."],
-  ["Chaos", "Student mode only. Hidden and Visible swap two non-captured boards. Brutal uses a selected maximum random interval and can swap boards, remove a mark or flip X/O on one cell."],
-  ["First Blood", "The first player to capture a mini board immediately gets a one-time board-swap power."],
-  ["Sudden Death", "The player has 5/10/15 seconds. When time runs out, the action is lost and the turn moves on."],
-  ["Chat and rooms", "Chat works inside a room. Public rooms appear on the list if there is a free slot."],
+  ["Online", "Create a room and send the link to a friend, or wait in a public room. Moves are synchronized by the server. Two players are required."],
+  ["Local", "One device controls both X and O. Use it to play on one phone or quickly test the rules without another person."],
+  ["Bot", "You play as X against the computer O. Bot difficulty is available in the options. Bot works in Classic and Student."],
+  ["Classic", "One 3x3 board. The player who gets three marks in a row, column or diagonal wins."],
+  ["Student", "You play on 9 mini boards. The cell you choose sends the opponent to the matching mini board. If that board is already won or closed, the indicated player chooses any available board."],
+  ["Chaos", "A special rule for Student only. From time to time the game changes the board situation. Visible chaos warns you, Brutal chaos can change more."],
+  ["First Blood", "The first player to capture a mini board in Student gets a one-time power to swap two boards."],
+  ["Sudden Death", "The player has limited time to move. If time runs out, the action is lost and the game continues."],
+  ["Rooms and chat", "Public rooms appear on the list if there is a free slot. Chat works only inside the current room."]
 ];
 const RULES_ENG = RULE_SECTIONS_ENG.map(([h, d]) => `${h}\n${d}`).join("\n\n");
 function t(key) {
@@ -225,6 +229,13 @@ function createBackgroundSymbols() {
   }
 }
 
+function syncHiddenModeControls() {
+  const play = $("playMode");
+  const version = $("versionMode");
+  if (play) play.value = settings.playMode;
+  if (version) version.value = settings.versionMode;
+}
+
 function refreshMenu() {
   document.querySelectorAll("[data-play]").forEach(b => b.classList.toggle("active", b.dataset.play === settings.playMode));
   document.querySelectorAll("[data-version]").forEach(b => b.classList.toggle("active", b.dataset.version === settings.versionMode));
@@ -248,6 +259,7 @@ function refreshMenu() {
   // Pokoje online są publiczne automatycznie, bez checkboxa.
   $("roomNameWrap")?.classList.add("hidden");
   document.querySelectorAll("[data-menu-lang]").forEach(btn => btn.classList.toggle("active", btn.dataset.menuLang === language));
+  syncHiddenModeControls();
   applyMenuLanguage();
 }
 function applySettingsFromControls() {
@@ -575,7 +587,7 @@ function applyLanguage() {
   applyMenuLanguage();
   if ($("rulesTitle")) $("rulesTitle").textContent = t("rulesTitle");
   if ($("gameHelpTitle")) $("gameHelpTitle").textContent = t("rulesTitle");
-  if ($("rulesText")) $("rulesText").textContent = language === "PL" ? RULES_PL : RULES_ENG;
+  if ($("rulesText")) renderSegmentedRules($("rulesText"));
   if ($("gameHelpText")) renderSegmentedRules($("gameHelpText"));
   if ($("rematchBtn")) $("rematchBtn").textContent = t("rematch");
   if ($("resetScoreBtn")) $("resetScoreBtn").textContent = t("resetScore");
@@ -587,7 +599,15 @@ function applyLanguage() {
 }
 function renderSegmentedRules(container) {
   const sections = language === "ENG" ? RULE_SECTIONS_ENG : RULE_SECTIONS_PL;
-  container.innerHTML = sections.map(([h, d]) => `<article class="rule-segment"><h3>${esc(h)}</h3><p>${esc(d)}</p></article>`).join("");
+  container.innerHTML = `
+    <div class="rules-intro-card">
+      <strong>${language === "ENG" ? "Choose the section you need" : "Instrukcja jest podzielona na tryby"}</strong>
+      <span>${language === "ENG" ? "Online, Local, Bot, Classic, Student and special rules are explained separately." : "Online, Lokalnie, Bot, Classic, Studencki i zasady specjalne są opisane osobno."}</span>
+    </div>
+    <div class="rules-segment-grid">
+      ${sections.map(([h, d]) => `<article class="rule-segment clean-rule-segment"><h3>${esc(h)}</h3><p>${esc(d)}</p></article>`).join("")}
+    </div>
+  `;
 }
 function openGameHelp() {
   applyLanguage();

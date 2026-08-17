@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-    <title>XO Chaos Online — v31-clean</title>
+    <title>XO Chaos Online — v31.1-clean</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4dfb9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
     <link rel="manifest" href="/static/manifest.json" />
     <link rel="apple-touch-icon" href="/static/icon-192.png" />
     <link rel="icon" href="/static/icon-192.png" />
-    <link rel="stylesheet" href="/static/style.css?v=v31-clean" />
+    <link rel="stylesheet" href="/static/style.css?v=v31.1-clean" />
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body class="paper-template">
@@ -24,14 +24,34 @@
             <div class="score">O: <span id="scoreO">0</span></div>
         </header>
 
-        <section id="menuView" class="card menu-card v27-menu-card">
-            <div class="v27-menu-head">
+        <section id="menuView" class="card menu-card v27-menu-card clean-menu-card">
+            <div class="v27-menu-head clean-menu-head">
                 <div class="v27-logo" aria-label="XO Chaos Online">
                     <div><span class="v27-x">X</span><span class="v27-o">O</span></div>
                     <strong>CHAOS</strong>
                     <em>ONLINE</em>
                 </div>
             </div>
+
+            <div class="v31-play-mode-panel" aria-label="Tryb gry">
+                <button type="button" class="v27-mode-btn active" data-play="online">👥 ONLINE</button>
+                <button type="button" class="v27-mode-btn" data-play="local">🏠 LOKALNIE</button>
+                <button type="button" class="v27-mode-btn" data-play="bot">🤖 BOT</button>
+            </div>
+
+            <button type="button" class="paper-play v27-main-play" id="paperMainPlay" aria-label="Graj"></button>
+
+            <div class="paper-version-grid v27-version-grid clean-version-grid" aria-label="Wersja gry">
+                <button type="button" class="paper-version-card classic active" data-version="classic">
+                    <h3>KLASYCZNY</h3>
+                    <p>Zasady, które<br>znasz i lubisz.</p>
+                    <span class="paper-card-doodle">X|O|X<br>O|X|O<br>X|O|X</span>
+                </button>
+                <button type="button" class="paper-version-card student" data-version="student">
+                    <h3>STUDENCKI</h3>
+                    <p>9 plansz.<br>Więcej taktyki.</p>
+                    <span class="paper-card-doodle student">🎓</span>
+                </button>
             </div>
 
             <div class="paper-ribbon-title v27-ribbon">ZASADY SPECJALNE ⓘ</div>
@@ -84,14 +104,7 @@
                 </label>
             </div>
 
-            <div class="v27-play-zone">
-                <button type="button" class="v27-mode-btn active" data-play="online">👥 ONLINE</button>
-                <button type="button" class="paper-play v27-main-play" id="paperMainPlay" aria-label="Graj"></button>
-                <button type="button" class="v27-mode-btn" data-play="bot">🤖 BOT</button>
-            </div>
-            <button type="button" class="v27-local-btn" data-play="local">🏠 LOKALNIE</button>
-
-            <div class="v27-lower-grid v32-lower-grid">
+            <div class="v27-lower-grid v32-lower-grid clean-lower-grid">
                 <button type="button" id="publicRoomsBtn" class="v32-rooms-card" title="Pokoje publiczne"><span>🌍</span><b>POKOJE</b></button>
                 <div class="v27-settings-card v32-settings-card">
                     <span>⚙</span>
@@ -104,6 +117,7 @@
                 <input id="roomCodeInput" maxlength="8" placeholder="Kod pokoju" />
                 <button type="button" id="joinRoomBtn">DOŁĄCZ</button>
             </div>
+
             <button type="button" id="instructionsBtn" class="paper-wide-btn v27-instruction-btn v29-visible-instructions">📖 INSTRUKCJA</button>
 
             <div class="hidden-controls" aria-hidden="true">
@@ -183,8 +197,8 @@
         </div>
     </div>
 
-    <div id="appVersionBadge" class="version-badge">v31-clean</div>
+    <div id="appVersionBadge" class="version-badge">v31.1-clean</div>
     <p id="toast" class="toast hidden"></p>
-    <script src="/static/game.js?v=v31-clean"></script>
+    <script src="/static/game.js?v=v31.1-clean"></script>
 </body>
 </html>

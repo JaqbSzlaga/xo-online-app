@@ -1,27 +1,26 @@
-# XO Chaos Online — v31-clean
+# XO Chaos Online — v31.1-clean
 
-## Cel
+## Co poprawia
 
-Uproszczona wersja pod publikację/sklep.
-
-## Zostaje
-
-- Classic
-- Studencki
-- Online
-- Lokalnie
-- Bot
-- Pokoje publiczne
-- Czat w pokoju
-- Ustawienia języka PL/ENG
-- Zasady specjalne:
+- Dodany widoczny wybór wersji gry:
+  - Klasyczny
+  - Studencki
+- Tryby rozgrywki są czytelne:
+  - Online
+  - Lokalnie
+  - Bot
+- Instrukcja jest podzielona na segmenty:
+  - Online
+  - Lokalnie
+  - Bot
+  - Classic
+  - Studencki
   - Chaos
   - Pierwsza krew
   - Nagła śmierć
-  - Start naprzemienny
-- Obecna grafika/menu
+  - Pokoje i czat
 
-## Usunięte z widoku i wyłączone logicznie
+## Nadal usunięte
 
 - Profil
 - Ranking
@@ -29,13 +28,12 @@ Uproszczona wersja pod publikację/sklep.
 - Nagrody
 - Sklep
 - Punkty
-- Bonus za logowanie
-- Testowe dodawanie punktów
+- Bonus logowania
 
 ## Widoczna wersja
 
 ```text
-v31-clean
+v31.1-clean
 ```
 
 ## Wgraj/podmień

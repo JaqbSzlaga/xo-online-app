@@ -1,4 +1,4 @@
-const CACHE_NAME = "xo-online-pwa-v31-clean";
+const CACHE_NAME = "xo-online-pwa-v31-1-clean-modes-instructions";
 
 const STATIC_ASSETS = [
   "/",

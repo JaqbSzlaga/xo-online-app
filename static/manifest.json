@@ -1,7 +1,7 @@
 {
   "name": "XO Chaos Online",
   "short_name": "XO Chaos",
-  "description": "XO Chaos Online — uproszczona wersja clean: Classic, Studencki, Online, Lokalnie, Bot, pokoje publiczne i czat.",
+  "description": "XO Chaos Online — v31.1 clean: wybór Classic/Studencki i segmentowana instrukcja.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
