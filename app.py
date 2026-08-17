@@ -391,8 +391,6 @@ def current_symbol(room: GameRoom, sid: str) -> Optional[str]:
             return room.chooser_player
         return room.turn
     if room.play_mode == "bot":
-        if room.version_mode == "student" and room.choose_board_mode and room.chooser_player == room.bot_symbol:
-            return room.bot_symbol
         return "X"
     return room.players.get(sid)
 
@@ -830,72 +828,38 @@ def bot_use_first_blood_if_needed(room: GameRoom) -> bool:
     return True
 
 
-
-def should_bot_act(room: GameRoom) -> bool:
-    if room.play_mode != "bot" or room.game_over:
-        return False
-    if room.turn == room.bot_symbol:
-        return True
-    if room.version_mode == "student" and room.choose_board_mode and room.chooser_player == room.bot_symbol:
-        return True
-    return False
-
-
-
 def maybe_bot_move(room: GameRoom):
-    socketio.sleep(0.55)
-    if not should_bot_act(room):
+    socketio.sleep(0.8)
+    if room.play_mode != "bot" or room.game_over or room.turn != room.bot_symbol:
         return
 
-    # Maksymalnie kilka kroków, bo w Studenckim bot może najpierw wybierać planszę,
-    # a dopiero potem wykonać ruch.
-    for _ in range(4):
-        if not should_bot_act(room):
-            break
-
-        if room.version_mode == "classic":
-            if room.turn != room.bot_symbol:
+    if room.version_mode == "classic":
+        idx = choose_bot_classic_move(room, room.bot_symbol)
+        if idx is not None:
+            handle_classic_move(room, room.bot_symbol, idx)
+    else:
+        # Pętla zabezpiecza Studencki: jeśli bot musi najpierw wybrać planszę,
+        # robi to, a potem od razu wykonuje legalny ruch.
+        for _ in range(3):
+            if room.game_over or room.turn != room.bot_symbol:
                 break
-            idx = choose_bot_classic_move(room, room.bot_symbol)
-            if idx is not None:
-                handle_classic_move(room, room.bot_symbol, idx)
-            break
-
-        # Studencki: jeśli bot jest wskazanym wybierającym planszę,
-        # wybiera dostępną planszę nawet wtedy, gdy aktualna tura formalnie należy do X.
-        if room.choose_board_mode and room.chooser_player == room.bot_symbol:
-            b = choose_bot_board(room)
-            if b is None:
+            if room.choose_board_mode:
+                b = choose_bot_board(room)
+                if b is None:
+                    break
+                handle_student_choose_board(room, room.bot_symbol, b)
+                socketio.sleep(0.25)
+                continue
+            move = choose_bot_student_move(room, room.bot_symbol)
+            if move is None:
                 break
-            handle_student_choose_board(room, room.bot_symbol, b)
-            room.refresh_deadline()
-            room.refresh_chaos_clock()
-            socketio.sleep(0.15)
-            continue
-
-        if room.turn != room.bot_symbol:
+            b, c = move
+            handle_student_move(room, room.bot_symbol, b, c)
+            bot_use_first_blood_if_needed(room)
             break
 
-        if room.choose_board_mode:
-            b = choose_bot_board(room)
-            if b is None:
-                break
-            handle_student_choose_board(room, room.bot_symbol, b)
-            room.refresh_deadline()
-            room.refresh_chaos_clock()
-            socketio.sleep(0.15)
-            continue
-
-        move = choose_bot_student_move(room, room.bot_symbol)
-        if move is None:
-            break
-        b, c = move
-        handle_student_move(room, room.bot_symbol, b, c)
-        bot_use_first_blood_if_needed(room)
-        room.refresh_deadline()
-        room.refresh_chaos_clock()
-        socketio.sleep(0.15)
-
+    room.refresh_deadline()
+    room.refresh_chaos_clock()
     emit_room_state(room)
 
 def deadline_watcher():
@@ -1000,7 +964,7 @@ def create_room(data):
     emit("room_created", {"code": code, "symbol": "X"})
     emit("chat_history", {"messages": room.chat_messages[-50:]})
     emit_room_state(room)
-    if should_bot_act(room):
+    if play_mode == "bot" and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
@@ -1131,7 +1095,7 @@ def make_move(data):
         room.refresh_deadline()
         room.refresh_chaos_clock()
     emit_room_state(room)
-    if should_bot_act(room):
+    if room.play_mode == "bot" and not room.game_over and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
@@ -1159,7 +1123,7 @@ def choose_board(data):
         room.refresh_deadline()
         room.refresh_chaos_clock()
     emit_room_state(room)
-    if should_bot_act(room):
+    if room.play_mode == "bot" and not room.game_over and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
@@ -1210,7 +1174,7 @@ def use_first_blood_swap(data):
         set_next_student_target(room, pending_target)
     room.refresh_deadline()
     emit_room_state(room)
-    if should_bot_act(room):
+    if room.play_mode == "bot" and not room.game_over and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
@@ -1238,7 +1202,7 @@ def rematch():
         return
     room.reset_round()
     emit_room_state(room)
-    if should_bot_act(room):
+    if room.play_mode == "bot" and not room.game_over and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
@@ -1250,7 +1214,7 @@ def reset_score():
     room = ROOMS[code]
     room.reset_match()
     emit_room_state(room)
-    if should_bot_act(room):
+    if room.play_mode == "bot" and not room.game_over and room.turn == room.bot_symbol:
         socketio.start_background_task(maybe_bot_move, room)
 
 
